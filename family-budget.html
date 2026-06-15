@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Family Budget" />
+<title>Family Budget</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { height: -webkit-fill-available; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #5D7599;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
+:root { --primary:#5D7599; --accent-in:#5D7599; --accent-out:#ba7517; --bg-main:#5D7599; --bg-body:#f4f6fb; }
+.theme-a { --primary:#147587; --accent-in:#147587; --accent-out:#FA7E5C; --bg-main:#147587; --bg-body:#F3ECE5; }
+.theme-b { --primary:#2A0800; --accent-in:#775144; --accent-out:#2A0800; --bg-main:#2A0800; --bg-body:#F4D8D8; }
+
+/* PAGES — hanya satu yang tampil */
+.page {
+  display: none;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+.page.active { display: flex; }
+
+/* LOGIN */
+#page-login {
+  background: var(--bg-main);
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  padding-top: max(env(safe-area-inset-top, 20px), 3rem);
+}
+.login-logo { width: 72px; height: 72px; background: rgba(255,255,255,0.18); border-radius: 22px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; }
+.login-logo i { font-size: 36px; color: #fff; }
+.login-tagline { color: rgba(255,255,255,0.9); font-size: 18px; font-weight: 500; margin-bottom: 2.5rem; }
+.login-card { background: #fff; border-radius: 20px; padding: 1.5rem; width: 100%; max-width: 380px; }
+.login-label { font-size: 13px; color: var(--primary); font-weight: 500; margin-bottom: 6px; display: block; }
+.login-input { width: 100%; padding: 13px 14px; border: 1px solid #DADADA; border-radius: 12px; font-size: 16px; color: #3a3a3a; background: #f9f9f9; outline: none; margin-bottom: 1rem; -webkit-appearance: none; }
+.login-input:focus { border-color: var(--primary); background: #fff; }
+.login-btn { width: 100%; padding: 14px; background: var(--primary); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 500; cursor: pointer; }
+
+/* MAIN */
+#page-main { background: var(--bg-main); }
+.app-header {
+  background: var(--bg-main);
+  padding: max(env(safe-area-inset-top, 20px), 1.5rem) 1.25rem 0;
+  flex-shrink: 0;
+}
+.header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
+.header-greeting { color: rgba(255,255,255,0.65); font-size: 13px; margin-bottom: 2px; }
+.header-name { color: #fff; font-size: 17px; font-weight: 500; }
+.settings-btn { background: rgba(255,255,255,0.15); border: none; border-radius: 8px; width: 36px; height: 36px; cursor: pointer; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.balance-section { display: flex; flex-direction: column; align-items: center; padding: 0 1.25rem 2rem; }
+.balance-label-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.balance-label { color: rgba(255,255,255,0.65); font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase; }
+.eye-btn { background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.7); padding: 4px; display: flex; align-items: center; }
+.eye-btn i { font-size: 18px; }
+.balance-amount { color: #fff; font-size: 34px; font-weight: 500; text-align: center; }
+
+.actions-card {
+  background: var(--bg-body);
+  border-radius: 28px 28px 0 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+}
+.actions-grid { display: flex; gap: 48px; align-items: center; justify-content: center; }
+.qa-btn { display: flex; flex-direction: column; align-items: center; gap: 14px; background: none; border: none; cursor: pointer; padding: 0; }
+.qa-btn:active { opacity: 0.75; transform: scale(0.95); }
+.qa-icon { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.qa-btn.income .qa-icon { background: var(--accent-in); }
+.qa-btn.expense .qa-icon { background: var(--accent-out); }
+.qa-icon i { font-size: 34px; color: #fff; }
+.qa-label { font-size: 15px; font-weight: 500; color: #3a3a3a; }
+
+/* BOTTOM NAV */
+.bottom-nav {
+  background: #fff;
+  border-top: 0.5px solid #e0e0e0;
+  display: flex;
+  width: 100%;
+  flex-shrink: 0;
+  padding: 10px 0;
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 10px);
+}
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; border: none; background: none; color: #ABB6C8; font-size: 10px; }
+.nav-item.active { color: var(--primary); }
+.nav-item i { font-size: 24px; }
+
+/* HISTORY & STATS PAGES */
+#page-history, #page-stats { background: var(--bg-body); }
+.page-header {
+  background: var(--bg-main);
+  padding: max(env(safe-area-inset-top, 20px), 1.25rem) 1.25rem 1.25rem;
+  display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+}
+.page-header-title { color: #fff; font-size: 17px; font-weight: 500; }
+.back-btn { background: rgba(255,255,255,0.15); border: none; border-radius: 8px; width: 36px; height: 36px; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+
+.scroll-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 1rem; }
+
+/* TX */
+.history-date-label { font-size: 11px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.4px; margin: 0.75rem 0 0.4rem; }
+.tx-item { background: #fff; border-radius: 12px; padding: 11px 13px; margin-bottom: 7px; display: flex; align-items: center; gap: 11px; border: 0.5px solid #e8e8e8; }
+.tx-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.tx-icon.out { background: #faeeda; }
+.tx-icon.in  { background: #eaf3de; }
+.tx-icon.out i { font-size: 18px; color: #ba7517; }
+.tx-icon.in  i { font-size: 18px; color: #3B6D11; }
+.tx-info { flex: 1; min-width: 0; }
+.tx-detail { font-size: 13px; font-weight: 500; color: #3a3a3a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tx-cat { font-size: 11px; color: #888; margin-top: 2px; }
+.tx-amount { font-size: 13px; font-weight: 500; white-space: nowrap; }
+.tx-amount.out { color: #ba7517; }
+.tx-amount.in  { color: #3B6D11; }
+
+/* STATS */
+.stats-header {
+  background: var(--bg-main);
+  padding: max(env(safe-area-inset-top, 20px), 1.25rem) 1.25rem 1.25rem;
+  flex-shrink: 0;
+}
+.stats-title  { color: #fff; font-size: 17px; font-weight: 500; margin-bottom: 2px; }
+.stats-period { color: rgba(255,255,255,0.7); font-size: 12px; }
+.summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.summary-tile { background: #fff; border-radius: 14px; border: 0.5px solid #e8e8e8; padding: 0.85rem 1rem; }
+.summary-tile-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+.summary-tile-val { font-size: 15px; font-weight: 500; }
+.summary-tile-val.in  { color: #3B6D11; }
+.summary-tile-val.out { color: #ba7517; }
+.stats-card { background: #fff; border-radius: 14px; border: 0.5px solid #e8e8e8; padding: 1rem 1.25rem; margin-bottom: 10px; }
+.stats-card-title { font-size: 12px; font-weight: 500; color: var(--primary); text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 0.75rem; }
+.cat-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.cat-name { font-size: 13px; color: #555; }
+.cat-val  { font-size: 13px; font-weight: 500; color: #ba7517; }
+.bar-wrap { height: 6px; background: #f0f0f0; border-radius: 3px; margin-bottom: 10px; }
+.bar-fill { height: 6px; border-radius: 3px; }
+
+/* DROPDOWN */
+.dropdown-wrap { position: relative; }
+.dropdown { position: absolute; top: 42px; right: 0; background: #fff; border-radius: 14px; box-shadow: 0 4px 24px rgba(0,0,0,0.18); padding: 0.5rem; min-width: 180px; z-index: 300; display: none; }
+.dropdown.open { display: block; }
+.dd-label { display: flex; align-items: center; gap: 10px; padding: 10px 12px 4px; font-size: 14px; color: #3a3a3a; font-weight: 500; }
+.dd-label i { font-size: 17px; color: var(--primary); }
+.theme-options { padding: 4px 12px 10px; display: flex; gap: 10px; }
+.theme-dot { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
+.theme-dot.active { border-color: #3a3a3a; }
+.theme-dot-0 { background: #5D7599; }
+.theme-dot-a { background: #147587; }
+.theme-dot-b { background: #2A0800; }
+.dd-divider { height: 0.5px; background: #eee; margin: 2px 0; }
+.dd-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; cursor: pointer; font-size: 14px; color: #3a3a3a; }
+.dd-item i { font-size: 17px; color: var(--primary); }
+
+/* MODAL */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 400; align-items: flex-end; }
+.modal-overlay.open { display: flex; }
+.modal-sheet {
+  background: #fff; border-radius: 24px 24px 0 0;
+  padding: 1.5rem;
+  padding-bottom: max(env(safe-area-inset-bottom, 16px), 1.5rem);
+  width: 100%; max-height: 88vh;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+}
+.modal-handle { width: 40px; height: 4px; background: #DADADA; border-radius: 2px; margin: 0 auto 1.25rem; }
+.modal-title { font-size: 17px; font-weight: 600; margin-bottom: 1.25rem; }
+.modal-title.in  { color: #3B6D11; }
+.modal-title.out { color: #ba7517; }
+.modal-label { font-size: 13px; color: var(--primary); font-weight: 500; margin-bottom: 6px; display: block; }
+.modal-input {
+  width: 100%; padding: 13px 14px; border: 1px solid #DADADA; border-radius: 12px;
+  font-size: 16px; margin-bottom: 1rem; outline: none; color: #3a3a3a;
+  -webkit-appearance: none; display: block;
+}
+.modal-input:focus { border-color: var(--primary); }
+.modal-select {
+  width: 100%; padding: 13px 14px; border: 1px solid #DADADA; border-radius: 12px;
+  font-size: 16px; margin-bottom: 1rem; outline: none; color: #3a3a3a;
+  background: #fff; -webkit-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'%3E%3Cpath fill='%23888' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center; display: block;
+}
+.save-btn { width: 100%; padding: 15px; color: #fff; border: none; border-radius: 14px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 4px; display: block; }
+.save-btn.in  { background: var(--accent-in); }
+.save-btn.out { background: var(--accent-out); }
+.save-btn:disabled { opacity: 0.6; }
+
+/* TOAST */
+.toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(30,30,30,0.92); color: #fff; padding: 11px 22px; border-radius: 24px; font-size: 14px; opacity: 0; transition: opacity 0.3s; z-index: 500; white-space: nowrap; pointer-events: none; }
+.toast.show { opacity: 1; }
+.spinner { display: inline-block; width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.empty-msg { color: #aaa; font-size: 13px; text-align: center; padding: 2rem 0; }
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- LOGIN -->
+<div id="page-login" class="page active">
+  <div class="login-logo"><i class="ti ti-wallet"></i></div>
+  <p class="login-tagline">yuk nyatet...</p>
+  <div class="login-card">
+    <label class="login-label">Username</label>
+    <input class="login-input" type="text" placeholder="username" id="login-user" autocomplete="username" autocapitalize="none" />
+    <label class="login-label">Password</label>
+    <input class="login-input" type="password" placeholder="••••••••" id="login-pass" autocomplete="current-password" />
+    <button class="login-btn" onclick="doLogin()">Masuk</button>
+  </div>
+</div>
+
+<!-- BERANDA -->
+<div id="page-main" class="page">
+  <div class="app-header">
+    <div class="header-top">
+      <div>
+        <p class="header-greeting">Halo,</p>
+        <p class="header-name" id="display-name">–</p>
+      </div>
+      <div class="dropdown-wrap">
+        <button class="settings-btn" onclick="toggleDropdown()"><i class="ti ti-dots-vertical"></i></button>
+        <div class="dropdown" id="dropdown">
+          <div class="dd-label"><i class="ti ti-palette"></i> Tema</div>
+          <div class="theme-options">
+            <div class="theme-dot theme-dot-0 active" id="dot-0" onclick="setTheme('default')"></div>
+            <div class="theme-dot theme-dot-a" id="dot-a" onclick="setTheme('a')"></div>
+            <div class="theme-dot theme-dot-b" id="dot-b" onclick="setTheme('b')"></div>
+          </div>
+          <div class="dd-divider"></div>
+          <div class="dd-item" onclick="doLogout()"><i class="ti ti-logout"></i> Logout</div>
+        </div>
+      </div>
+    </div>
+    <div class="balance-section">
+      <div class="balance-label-row">
+        <span class="balance-label">Total Saldo</span>
+        <button class="eye-btn" onclick="toggleBlur()"><i class="ti ti-eye-off" id="eye-icon"></i></button>
+      </div>
+      <p class="balance-amount" id="total-balance">Rp*******</p>
+    </div>
+  </div>
+  <div class="actions-card">
+    <div class="actions-grid">
+      <button class="qa-btn income" onclick="openModal('in')">
+        <div class="qa-icon"><i class="ti ti-arrow-down-left"></i></div>
+        <span class="qa-label">Cash In</span>
+      </button>
+      <button class="qa-btn expense" onclick="openModal('out')">
+        <div class="qa-icon"><i class="ti ti-arrow-up-right"></i></div>
+        <span class="qa-label">Cash Out</span>
+      </button>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-item active" onclick="showPage('main')"><i class="ti ti-home"></i>Beranda</button>
+    <button class="nav-item" onclick="showPage('stats')"><i class="ti ti-chart-pie"></i>Statistik</button>
+    <button class="nav-item" onclick="showPage('history')"><i class="ti ti-list"></i>Riwayat</button>
+  </div>
+</div>
+
+<!-- RIWAYAT -->
+<div id="page-history" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="showPage('main')"><i class="ti ti-arrow-left"></i></button>
+    <p class="page-header-title">Riwayat Transaksi</p>
+  </div>
+  <div class="scroll-content" id="history-list">
+    <p class="empty-msg">Memuat data...</p>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-item" onclick="showPage('main')"><i class="ti ti-home"></i>Beranda</button>
+    <button class="nav-item" onclick="showPage('stats')"><i class="ti ti-chart-pie"></i>Statistik</button>
+    <button class="nav-item active"><i class="ti ti-list"></i>Riwayat</button>
+  </div>
+</div>
+
+<!-- STATISTIK -->
+<div id="page-stats" class="page">
+  <div class="stats-header">
+    <p class="stats-title">Statistik</p>
+    <p class="stats-period" id="stats-period">–</p>
+  </div>
+  <div class="scroll-content">
+    <div class="summary-grid">
+      <div class="summary-tile"><p class="summary-tile-label">Total Masuk</p><p class="summary-tile-val in" id="stat-in">–</p></div>
+      <div class="summary-tile"><p class="summary-tile-label">Total Keluar</p><p class="summary-tile-val out" id="stat-out">–</p></div>
+    </div>
+    <div class="stats-card">
+      <p class="stats-card-title">Pengeluaran per Kategori</p>
+      <div id="cat-bars"><p class="empty-msg">Memuat...</p></div>
+    </div>
+    <div class="stats-card">
+      <p class="stats-card-title">Tren 7 Hari Terakhir</p>
+      <canvas id="trend-chart" height="130"></canvas>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-item" onclick="showPage('main')"><i class="ti ti-home"></i>Beranda</button>
+    <button class="nav-item active"><i class="ti ti-chart-pie"></i>Statistik</button>
+    <button class="nav-item" onclick="showPage('history')"><i class="ti ti-list"></i>Riwayat</button>
+  </div>
+</div>
+
+<!-- MODAL TRANSAKSI -->
+<div class="modal-overlay" id="modal-add">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <p class="modal-title" id="modal-title">Cash In</p>
+    <label class="modal-label">Nominal (Rp)</label>
+    <input class="modal-input" type="text" inputmode="numeric" placeholder="0" id="m-amount" />
+    <label class="modal-label">Kategori</label>
+    <select class="modal-select" id="m-cat"></select>
+    <label class="modal-label">Keterangan</label>
+    <input class="modal-input" type="text" placeholder="contoh: gaji bulanan" id="m-detail" autocapitalize="words" />
+    <label class="modal-label">Kantong Uang</label>
+    <select class="modal-select" id="m-wallet">
+      <option value="Cash (Dompet)">Cash (Dompet)</option>
+      <option value="Cash ATM">Cash ATM</option>
+      <option value="Tabungan">Tabungan</option>
+      <option value="Spaylater">Spaylater</option>
+    </select>
+    <button class="save-btn in" id="modal-save-btn" onclick="saveTransaction()">Simpan Cash In</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbyx0D0ZRZBfcV9_i-TQ1QZMHvH3AlUZegf4lmFqRANqaPFnLzWIB7ODi6MswW0fDSbdHA/exec";
+const USERS = { pino:"181818", cipcip:"252525" };
+const CATS_IN  = ['Freelance','Gaji WaGoMu','Nabung','Tarik Cash','Bayareun','Lainnya'];
+const CATS_OUT = ['Jajan','Butuh (Rutin)','Butuh','Foya2','Bayareun','Spaylater','Other','Lainnya'];
+const ICON_MAP = { 'Jajan':'ti-tools-kitchen-2','Freelance':'ti-briefcase','Gaji WaGoMu':'ti-building-bank','Foya2':'ti-music','Butuh (Rutin)':'ti-home','Nabung':'ti-piggy-bank','Spaylater':'ti-credit-card','Bayareun':'ti-shirt','Tarik Cash':'ti-cash','Other':'ti-dots','Lainnya':'ti-dots','Butuh':'ti-shopping-bag' };
+const CAT_COLORS = ['#ba7517','#5D7599','#C2C4B6','#ABB6C8','#888','#3B6D11','#FA7E5C','#147587'];
+
+let isBlurred=true, currentType='in', rawAmount='', userName='', allTx=[], chartObj=null;
+
+/* FORMAT NOMINAL */
+document.getElementById('m-amount').addEventListener('input', function(){
+  let v = this.value.replace(/\./g,'').replace(/[^0-9]/g,'');
+  rawAmount = v;
+  this.value = v ? parseInt(v).toLocaleString('id-ID') : '';
+});
+
+/* TOAST */
+function toast(msg, ms=2800){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), ms);
+}
+
+/* THEME */
+function setTheme(t){
+  const app=document.getElementById('app');
+  app.className = t==='default' ? '' : 'theme-'+t;
+  document.querySelectorAll('.theme-dot').forEach(d=>d.classList.remove('active'));
+  document.getElementById(t==='default'?'dot-0':'dot-'+t).classList.add('active');
+  closeDropdown();
+}
+
+/* AUTH */
+function doLogin(){
+  const u=document.getElementById('login-user').value.trim().toLowerCase();
+  const p=document.getElementById('login-pass').value;
+  if(!u){ toast('Masukkan username dulu.'); return; }
+  if(!USERS[u]||USERS[u]!==p){ toast('Username atau password salah.'); return; }
+  userName=u.charAt(0).toUpperCase()+u.slice(1);
+  document.getElementById('display-name').textContent=userName;
+  switchPage('main');
+  loadTx();
+}
+
+function doLogout(){
+  switchPage('login');
+  document.getElementById('login-user').value='';
+  document.getElementById('login-pass').value='';
+  isBlurred=true; allTx=[];
+  document.getElementById('total-balance').textContent='Rp*******';
+  document.getElementById('eye-icon').className='ti ti-eye-off';
+  closeDropdown();
+}
+
+/* PAGE */
+function switchPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function showPage(id){
+  switchPage(id);
+  if(id==='history') renderHistory();
+  if(id==='stats'){ renderStats(); setTimeout(buildChart,100); }
+}
+
+/* BLUR */
+function toggleBlur(){
+  isBlurred=!isBlurred;
+  document.getElementById('total-balance').textContent=isBlurred?'Rp*******':formatRp(calcSaldo());
+  document.getElementById('eye-icon').className=isBlurred?'ti ti-eye-off':'ti ti-eye';
+}
+function calcSaldo(){ return allTx.reduce((s,t)=>t.Tipe==='in'?s+(+t.Nominal):s-(+t.Nominal),0); }
+
+/* DROPDOWN */
+function toggleDropdown(){ document.getElementById('dropdown').classList.toggle('open'); }
+function closeDropdown(){ document.getElementById('dropdown').classList.remove('open'); }
+document.addEventListener('click',e=>{ if(!e.target.closest('.dropdown-wrap')) closeDropdown(); });
+
+/* MODAL */
+function openModal(type){
+  currentType=type; rawAmount='';
+  document.getElementById('m-amount').value='';
+  document.getElementById('m-detail').value='';
+  const catSel=document.getElementById('m-cat');
+  catSel.innerHTML='<option value="">Pilih kategori...</option>';
+  (type==='in'?CATS_IN:CATS_OUT).forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; catSel.appendChild(o); });
+  const titleEl=document.getElementById('modal-title');
+  const saveBtn=document.getElementById('modal-save-btn');
+  if(type==='in'){ titleEl.textContent='↙ Cash In'; titleEl.className='modal-title in'; saveBtn.className='save-btn in'; saveBtn.textContent='Simpan Cash In'; }
+  else { titleEl.textContent='↗ Cash Out'; titleEl.className='modal-title out'; saveBtn.className='save-btn out'; saveBtn.textContent='Simpan Cash Out'; }
+  document.getElementById('modal-add').classList.add('open');
+}
+function closeModal(){ document.getElementById('modal-add').classList.remove('open'); }
+document.getElementById('modal-add').addEventListener('click',e=>{ if(e.target===document.getElementById('modal-add')) closeModal(); });
+
+/* SAVE */
+async function saveTransaction(){
+  const amount=parseFloat(rawAmount);
+  const cat=document.getElementById('m-cat').value;
+  const detail=document.getElementById('m-detail').value.trim();
+  const wallet=document.getElementById('m-wallet').value;
+  if(!amount||amount<=0){ toast('Masukkan nominal yang valid.'); return; }
+  if(!cat){ toast('Pilih kategori dulu.'); return; }
+  if(!detail){ toast('Isi keterangan transaksi.'); return; }
+
+  const btn=document.getElementById('modal-save-btn');
+  btn.innerHTML='<span class="spinner"></span>Menyimpan...';
+  btn.disabled=true;
+
+  const now=new Date();
+  const tanggal=now.toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const payload={tanggal,username:userName,tipe:currentType,kategori:cat,keterangan:detail,nominal:amount,kantong:wallet};
+
+  try{
+    await fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    allTx.unshift({Tanggal:tanggal,Username:userName,Tipe:currentType,Kategori:cat,Keterangan:detail,Nominal:amount,Kantong:wallet});
+    if(!isBlurred) document.getElementById('total-balance').textContent=formatRp(calcSaldo());
+    toast('✅ Transaksi tersimpan!');
+    closeModal();
+  } catch(err){
+    toast('⚠️ Gagal menyimpan. Cek koneksi internet.');
+  } finally{
+    btn.disabled=false;
+    btn.innerHTML=currentType==='in'?'Simpan Cash In':'Simpan Cash Out';
+    btn.className='save-btn '+currentType;
+  }
+}
+
+/* LOAD */
+async function loadTx(){
+  try{
+    const res=await fetch(SHEET_URL+'?t='+Date.now());
+    const json=await res.json();
+    if(json.status==='ok'){ allTx=json.data.reverse(); if(!isBlurred) document.getElementById('total-balance').textContent=formatRp(calcSaldo()); }
+  } catch(e){}
+}
+
+/* HISTORY */
+function renderHistory(){
+  const list=document.getElementById('history-list');
+  if(!allTx.length){ list.innerHTML='<p class="empty-msg">Belum ada transaksi.</p>'; return; }
+  let html='', lastDate='';
+  allTx.forEach(tx=>{
+    if(tx.Tanggal!==lastDate){ html+=`<p class="history-date-label">${tx.Tanggal||'–'}</p>`; lastDate=tx.Tanggal; }
+    const dc=tx.Tipe==='in'?'in':'out';
+    const sign=tx.Tipe==='in'?'+':'-';
+    const icon=ICON_MAP[tx.Kategori]||'ti-receipt';
+    html+=`<div class="tx-item"><div class="tx-icon ${dc}"><i class="ti ${icon}"></i></div><div class="tx-info"><p class="tx-detail">${tx.Keterangan}</p><p class="tx-cat">${tx.Kategori} · ${tx.Username||''}</p></div><p class="tx-amount ${dc}">${sign}${formatRp(tx.Nominal)}</p></div>`;
+  });
+  list.innerHTML=html;
+}
+
+/* STATS */
+function renderStats(){
+  const now=new Date();
+  document.getElementById('stats-period').textContent=now.toLocaleDateString('id-ID',{month:'long',year:'numeric'});
+  const m=now.getMonth(), y=now.getFullYear();
+  const mTx=allTx.filter(tx=>{
+    if(!tx.Tanggal) return false;
+    const pts=tx.Tanggal.split('/');
+    if(pts.length<3) return true;
+    const d=new Date(+pts[2],+pts[1]-1,+pts[0]);
+    return d.getMonth()===m&&d.getFullYear()===y;
+  });
+  document.getElementById('stat-in').textContent=formatRp(mTx.filter(t=>t.Tipe==='in').reduce((s,t)=>s+(+t.Nominal||0),0));
+  document.getElementById('stat-out').textContent=formatRp(mTx.filter(t=>t.Tipe!=='in').reduce((s,t)=>s+(+t.Nominal||0),0));
+  const catMap={};
+  mTx.filter(t=>t.Tipe!=='in').forEach(t=>{ catMap[t.Kategori]=(catMap[t.Kategori]||0)+(+t.Nominal||0); });
+  const cats=Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
+  const maxV=cats.length?cats[0][1]:1;
+  const bars=document.getElementById('cat-bars');
+  if(!cats.length){ bars.innerHTML='<p class="empty-msg">Belum ada pengeluaran bulan ini.</p>'; return; }
+  bars.innerHTML=cats.map(([name,val],i)=>`<div class="cat-row"><span class="cat-name">${name}</span><span class="cat-val">${formatRp(val)}</span></div><div class="bar-wrap"><div class="bar-fill" style="width:${Math.round(val/maxV*100)}%;background:${CAT_COLORS[i%CAT_COLORS.length]};"></div></div>`).join('');
+}
+
+function buildChart(){
+  const ctx=document.getElementById('trend-chart');
+  if(!ctx) return;
+  if(chartObj) chartObj.destroy();
+  const days=[],inD=[],outD=[];
+  for(let i=6;i>=0;i--){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    days.push(d.toLocaleDateString('id-ID',{day:'numeric',month:'numeric'}));
+    const dStr=d.toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric'});
+    const dayTx=allTx.filter(t=>t.Tanggal===dStr);
+    inD.push(dayTx.filter(t=>t.Tipe==='in').reduce((s,t)=>s+(+t.Nominal||0),0));
+    outD.push(dayTx.filter(t=>t.Tipe!=='in').reduce((s,t)=>s+(+t.Nominal||0),0));
+  }
+  chartObj=new Chart(ctx,{
+    type:'bar',
+    data:{labels:days,datasets:[{label:'Masuk',data:inD,backgroundColor:'#5D7599',borderRadius:4},{label:'Keluar',data:outD,backgroundColor:'#faeeda',borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:10,padding:8}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'#f0f0f0'},ticks:{font:{size:10},callback:v=>v>=1000000?(v/1000000).toFixed(1)+'jt':v>=1000?(v/1000)+'rb':v}}}}
+  });
+}
+
+function formatRp(v){ return 'Rp'+Math.abs(parseFloat(v)||0).toLocaleString('id-ID'); }
+</script>
+</body>
+</html>
