@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Dompet Pino" />
 <title>Dompet Pino</title>
+<link rel="apple-touch-icon" sizes="180x180" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAAEgElEQVR4nO3dTVYbORiGUcHpbYZhs4KwiGYFybBZaHrQx0kIxq4fufTp9b3jHLtSevIhi4I8tMG+fP32Y/Q10M/b6/PDyPc//M0FfF+ODvyQNxMxrR0T903fQMicc8uwb/LCQmaJW4Td9QWFzBY9w+7yQkKmhx5hP+59ATHTS4+WdgUtZnrb29SmES9kjrBlC7J6QouZo2xpbVXQYuZoa5tbHLSYGWVNe4uCFjOjLW1w97EdVHI1aNOZKpa0eDFoMVPNtSY/DVrMVHWpTXtoopwN2nSmus8aNaGJ8iFo05lZnGvVhCbKu6BNZ2bzZ7MmNFF+Bm06M6vf2zWhiSJoojy2ZrvB/E4Nm9BEETRRBE2UB/tnkpjQRBE0UQRNFEETRdBEETRRBE0UQRNF0EQRNFEETZS/Rl/AOf/+8/foS2Chp5fvoy/hnVIPJwl5XlXCLrPlEPPcqqxfiaCr3Az2qbCOw4OucBPoZ/R6Dg169F+e2xi5rsMnNPQ07JRjyb/iKp+c+ajq+pWd0GKurer6lAy66s3ivYrrVDJo2ErQRBE0UQRNFEETRdBEETRRBE0UQRNF0EQRNFEETRRBE0XQRBE0UQRNlJJB++HZOVRcp5JBt1bzZvFL1fUp+bvtTqreNOoqO6FhC0ETRdBEETRRBE0UQROl5LFdxd/Iw3nVjlZLBs111UKqQtCTEfJl9tATEfN1gp6EmJcR9ATEvJygieJDYXGXpnOF481qXz1M6ElViLm1OtdxYkLfmeoTfy9B34klW4PTn5k5bFuOO7B2n1ttX7yGoMNtjXPWqAUdbG+UM0YtaKIIOlSv6TrblBY0UQRNFEETRdBEEXSoXt/tm+27hoImiqCD7Z2us03n1gQdb2uUM8bcmqDvwto4Z425NY+P3o1TpJ6HJkpCtJfYckyqyjMWVa7jxIQu7unl+6fRVIupAhOaKIKeQPq+tydBT0LUywh6IqK+TtCTeXr5LuwLnHJMqkrU1U5aTGiiCJoogiaKoIkiaKIImiiCJoqgiSJoogiaKIImiqCJUjLoag+8cF7FdRoW9LWnxSreLH65tj6jngYsOaFPRF1T5XV5+PL124+RF1D55rDNyGe1S09oWGt40FV+8oI+Rq/n8KBbG38T6KPCOpYIurUaN4Ptqqzf8A+F5/igOI8qIZ+UDPpE2HVVC/mkdNCwVpk9NPQgaKIImiiCJoqgiSJoogiaKIImiqCJImiiCJooj2+vzw+jLwJ6eHt9fjChiSJoogiaKI+t/b/3GH0hsMepYROaKIImys+gbTuY1e/tmtBEeRe0Kc1s/mzWhCbKh6BNaWZxrlUTmihngzalqe6zRk1oonwatClNVZfavDihRU0115q8uuUQNVUsadEemiiLgjalGW1pg4sntKgZZU17q7YcouZoa5tbvYcWNUfZ0tquOP13FtzCnqG565TDtKa3vU3tPrYTNb30aKlrjLYgbNFzKN5kugqbJW7x1f2m2wVhc84tt6mH7H+FTWvHfN46/AOduO/L0YcGw08oBJ5l9KnXf5+mTxwuJD61AAAAAElFTkSuQmCC" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
@@ -18,7 +19,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .theme-a { --primary:#147587; --accent-in:#147587; --accent-out:#FA7E5C; --bg-main:#147587; --bg-body:#F3ECE5; }
 .theme-b { --primary:#2A0800; --accent-in:#775144; --accent-out:#2A0800; --bg-main:#2A0800; --bg-body:#F4D8D8; }
 
-.page { display: none; flex-direction: column; width: 100%; min-height: 100vh; min-height: -webkit-fill-available; }
+.page { display: none; flex-direction: column; width: 100%; height: 100vh; height: -webkit-fill-available; overflow: hidden; }
 .page.active { display: flex; }
 
 /* LOGIN */
@@ -59,7 +60,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .wc-amount.negative { color: #ffb3b3; }
 
 /* ACTIONS CARD */
-.actions-card { background: var(--bg-body); border-radius: 28px 28px 0 0; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1.5rem; transition: background 0.3s; }
+.actions-card { background: var(--bg-body); border-radius: 28px 28px 0 0; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1.5rem; transition: background 0.3s; overflow: hidden; }
 .actions-grid { display: flex; gap: 48px; align-items: center; justify-content: center; }
 .qa-btn { display: flex; flex-direction: column; align-items: center; gap: 14px; background: none; border: none; cursor: pointer; padding: 0; }
 .qa-btn:active { opacity: 0.75; transform: scale(0.95); }
@@ -70,7 +71,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .qa-label { font-size: 15px; font-weight: 500; color: #3a3a3a; }
 
 /* BOTTOM NAV */
-.bottom-nav { background: #fff; border-top: 0.5px solid #e0e0e0; display: flex; width: 100%; flex-shrink: 0; padding: 10px 0; padding-bottom: max(env(safe-area-inset-bottom,0px),10px); }
+.bottom-nav { background: #fff; border-top: 0.5px solid #e0e0e0; display: flex; width: 100%; flex-shrink: 0; padding: 10px 0; padding-bottom: max(env(safe-area-inset-bottom,0px),10px); position: sticky; bottom: 0; left: 0; z-index: 50; }
 .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; border: none; background: none; color: #ABB6C8; font-size: 10px; }
 .nav-item.active { color: var(--primary); }
 .nav-item i { font-size: 24px; }
@@ -79,7 +80,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .page-header { background: var(--bg-main); padding: max(env(safe-area-inset-top,20px),1.25rem) 1.25rem 1.25rem; display: flex; align-items: center; gap: 12px; flex-shrink: 0; transition: background 0.3s; }
 .page-header-title { color: #fff; font-size: 17px; font-weight: 500; }
 .back-btn { background: rgba(255,255,255,0.15); border: none; border-radius: 8px; width: 36px; height: 36px; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
-.scroll-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 1rem; }
+.scroll-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 1rem; min-height: 0; }
 
 /* TX ITEMS */
 .history-date-label { font-size: 11px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.4px; margin: 0.75rem 0 0.4rem; }
@@ -150,7 +151,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
 /* CATEGORY BUTTONS */
 .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1rem; }
-.cat-btn { padding: 12px 8px; border-radius: 12px; border: 1.5px solid #DADADA; background: #fff; font-size: 13px; font-weight: 500; color: #3a3a3a; cursor: pointer; text-align: center; transition: all 0.15s; }
+.cat-btn { padding: 12px 8px; border-radius: 12px; border: 1.5px solid #DADADA; background: #fff; font-size: 13px; font-weight: 500; color: #3a3a3a; cursor: pointer; text-align: center; transition: all 0.15s; line-height: 1.4; }
+.cat-btn i { font-size: 22px; display: block; margin-bottom: 6px; line-height: 1; }
 .cat-btn:active { transform: scale(0.97); }
 .cat-btn.selected-in  { border-color: #3B6D11; background: #eaf3de; color: #3B6D11; }
 .cat-btn.selected-out { border-color: #ba7517; background: #faeeda; color: #ba7517; }
@@ -161,8 +163,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
 /* WALLET SELECTOR */
 .wallet-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1rem; }
-.wallet-btn { padding: 12px 8px; border-radius: 12px; border: 1.5px solid #DADADA; background: #fff; font-size: 13px; font-weight: 500; color: #3a3a3a; cursor: pointer; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.wallet-btn i { font-size: 18px; }
+.wallet-btn { padding: 12px 8px; border-radius: 12px; border: 1.5px solid #DADADA; background: #fff; font-size: 13px; font-weight: 500; color: #3a3a3a; cursor: pointer; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.wallet-btn i { font-size: 22px; display: block; line-height: 1; }
+.wallet-btn span { display: block; font-size: 11px; }
 .wallet-btn.selected-tab { border-color: #2e7d52; background: #eaf3de; color: #2e7d52; }
 .wallet-btn.selected-ops { border-color: #5D7599; background: #e8eef5; color: #5D7599; }
 
@@ -217,8 +220,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
   <div class="login-card">
     <label class="login-label">Username</label>
     <input class="login-input" type="text" placeholder="username" id="login-user" autocomplete="username" autocapitalize="none" />
-    <label class="login-label">Password</label>
-    <input class="login-input" type="password" placeholder="••••••••" id="login-pass" autocomplete="current-password" />
+
     <button class="login-btn" onclick="doLogin()">Masuk</button>
   </div>
 </div>
@@ -252,12 +254,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
       </div>
       <p class="balance-amount" id="total-balance">Rp*******</p>
       <div class="wallet-cards">
-        <div class="wallet-card tabungan">
-          <p class="wc-label"><i class="ti ti-piggy-bank"></i> Tabungan</p>
+        <div class="wallet-card tabungan" id="wc-tab" onmousedown="holdReveal('tab')" ontouchstart="holdReveal('tab')" onmouseup="hideReveal('tab')" ontouchend="hideReveal('tab')">
+          <p class="wc-label"><i class="ti ti-piggy-bank"></i> Tabungan <span style="font-size:10px;opacity:0.7;">(tahan untuk lihat)</span></p>
           <p class="wc-amount" id="w-tabungan">Rp*******</p>
         </div>
-        <div class="wallet-card operasional">
-          <p class="wc-label"><i class="ti ti-wallet"></i> Operasional</p>
+        <div class="wallet-card operasional" id="wc-ops" onmousedown="holdReveal('ops')" ontouchstart="holdReveal('ops')" onmouseup="hideReveal('ops')" ontouchend="hideReveal('ops')">
+          <p class="wc-label"><i class="ti ti-wallet"></i> Operasional <span style="font-size:10px;opacity:0.7;">(tahan untuk lihat)</span></p>
           <p class="wc-amount" id="w-operasional">Rp*******</p>
         </div>
       </div>
@@ -287,6 +289,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
   <div class="page-header">
     <button class="back-btn" onclick="showPage('main')"><i class="ti ti-arrow-left"></i></button>
     <p class="page-header-title">Riwayat Transaksi</p>
+  </div>
+  <div style="background:#fff;padding:10px 1rem;border-bottom:0.5px solid #e8e8e8;flex-shrink:0;display:flex;align-items:center;gap:8px;">
+    <i class="ti ti-calendar" style="font-size:18px;color:var(--primary);"></i>
+    <input type="date" id="filter-date" onchange="renderHistory()" style="border:1px solid #DADADA;border-radius:8px;padding:7px 10px;font-size:14px;color:#3a3a3a;outline:none;flex:1;" />
+    <button onclick="clearDateFilter()" style="background:none;border:none;color:#888;font-size:13px;cursor:pointer;padding:4px 6px;">Reset</button>
   </div>
   <div class="scroll-content" id="history-list"><p class="empty-msg">Memuat data...</p></div>
   <div class="bottom-nav">
@@ -352,6 +359,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
       <input class="modal-input" type="text" placeholder="Tulis keterangan..." id="m-manual" autocapitalize="words" />
     </div>
 
+    <div id="wallet-selector-wrap">
     <label class="modal-label">Sumber Dana</label>
     <div class="wallet-selector">
       <button class="wallet-btn" id="wb-tab" onclick="selectWallet('Tabungan')">
@@ -360,6 +368,20 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
       <button class="wallet-btn" id="wb-ops" onclick="selectWallet('Operasional')">
         <i class="ti ti-wallet"></i> Operasional
       </button>
+    </div>
+    </div>
+    <div id="transfer-wrap" style="display:none;">
+      <label class="modal-label">Arah Transfer</label>
+      <div class="wallet-selector">
+        <button class="wallet-btn" id="tr-tab-ops" onclick="selectTransfer('Tabungan','Operasional')">
+          <i class="ti ti-piggy-bank"></i>
+          <span style="font-size:11px;">Tabungan → Operasional</span>
+        </button>
+        <button class="wallet-btn" id="tr-ops-tab" onclick="selectTransfer('Operasional','Tabungan')">
+          <i class="ti ti-wallet"></i>
+          <span style="font-size:11px;">Operasional → Tabungan</span>
+        </button>
+      </div>
     </div>
 
     <button class="save-btn in" id="modal-save-btn" onclick="showConfirm()">Lanjut →</button>
@@ -403,13 +425,14 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
 <script>
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbyx0D0ZRZBfcV9_i-TQ1QZMHvH3AlUZegf4lmFqRANqaPFnLzWIB7ODi6MswW0fDSbdHA/exec";
-const USERS = { pino:"181818", cipcip:"252525" };
+const USERS = ["pino18", "cipcip25"];
 
 const CATS_IN = [
   { label:"Freelance", icon:"ti-briefcase" },
   { label:"Payment WaGoMu", icon:"ti-building-bank" },
   { label:"Jualan", icon:"ti-shopping-bag", optionalNote:true },
   { label:"Nabung", icon:"ti-piggy-bank", wallet:"Tabungan", optionalNote:true },
+  { label:"Transfer Dompet", icon:"ti-transfer", transfer:true },
   { label:"Lainnya", icon:"ti-dots", manual:true },
 ];
 const CATS_OUT = [
@@ -417,6 +440,8 @@ const CATS_OUT = [
   { label:"Jajan", icon:"ti-tools-kitchen-2", optionalNote:true },
   { label:"Bensin", icon:"ti-gas-station" },
   { label:"Tagihan", icon:"ti-receipt", sub:["IndiHome","Listrik","Paket Internet","Lainnya"] },
+  { label:"Healing", icon:"ti-walk", optionalNote:true },
+  { label:"Narik Uang", icon:"ti-cash", optionalNote:true },
   { label:"Butuh", icon:"ti-tool", manual:true },
 ];
 const CAT_COLORS = ['#ba7517','#5D7599','#2e7d52','#C2C4B6','#ABB6C8','#888'];
@@ -466,9 +491,8 @@ function setTheme(t){
 /* ── AUTH ── */
 function doLogin(){
   const u=document.getElementById('login-user').value.trim().toLowerCase();
-  const p=document.getElementById('login-pass').value;
   if(!u){ toast('Masukkan username dulu.'); return; }
-  if(!USERS[u]||USERS[u]!==p){ toast('Username atau password salah.'); return; }
+  if(!USERS.includes(u)){ toast('Username tidak dikenali.'); return; }
   userName=u.charAt(0).toUpperCase()+u.slice(1);
   document.getElementById('display-name').textContent=userName;
   switchPage('main');
@@ -553,13 +577,15 @@ function openModal(type, editData){
   document.getElementById('m-manual').value='';
   document.getElementById('subcat-wrap').style.display='none';
   document.getElementById('manual-wrap').style.display='none';
+  document.getElementById('m-manual').value='';
+  document.getElementById('m-manual').dataset.required='false';
 
   // Build category buttons
   const cats = type==='in' ? CATS_IN : CATS_OUT;
   const grid = document.getElementById('cat-grid');
   grid.innerHTML = cats.map(c=>`
     <button class="cat-btn${c.manual?' special':''}" onclick="selectCat('${c.label}')" id="cb-${c.label.replace(/\s/g,'_')}">
-      <i class="ti ${c.icon}" style="font-size:18px;display:block;margin-bottom:4px;"></i>${c.label}
+      <i class="ti ${c.icon}"></i>${c.label}
     </button>`).join('');
 
   const titleEl=document.getElementById('modal-title');
@@ -619,6 +645,15 @@ function selectCat(label, skipScroll){
     document.getElementById('m-manual').dataset.required='false';
     manualWrap.style.display='block';
   }
+  // Transfer Dompet: show transfer direction selector
+  const transferWrap = document.getElementById('transfer-wrap');
+  if(transferWrap) transferWrap.style.display = (catDef && catDef.transfer) ? 'block' : 'none';
+  if(catDef && catDef.transfer){
+    // Hide normal wallet selector, show transfer UI
+    document.getElementById('wallet-selector-wrap').style.display='none';
+  } else {
+    document.getElementById('wallet-selector-wrap').style.display='block';
+  }
 }
 
 function selectSubCat(label){
@@ -636,6 +671,12 @@ function updateWalletBtns(){
   document.getElementById('wb-tab').className='wallet-btn'+(selectedWallet==='Tabungan'?' selected-tab':'');
   document.getElementById('wb-ops').className='wallet-btn'+(selectedWallet==='Operasional'?' selected-ops':'');
 }
+let transferFrom='', transferTo='';
+function selectTransfer(from, to){
+  transferFrom=from; transferTo=to;
+  document.getElementById('tr-tab-ops').className='wallet-btn'+(from==='Tabungan'?' selected-tab':'');
+  document.getElementById('tr-ops-tab').className='wallet-btn'+(from==='Operasional'?' selected-ops':'');
+}
 
 /* ── CONFIRM ── */
 function showConfirm(){
@@ -649,7 +690,7 @@ function showConfirm(){
   if(manualRequired && !manual){ toast('Isi keterangan dulu.'); return; }
 
   const sign=currentType==='in'?'+':'-';
-  const catLabel=selectedSubCat?`${selectedCat} · ${selectedSubCat}`:selectedCat;
+  const catLabel=catDef&&catDef.transfer?`Transfer: ${transferFrom} → ${transferTo}`:(selectedSubCat?`${selectedCat} · ${selectedSubCat}`:selectedCat);
   const keterangan=manual||catLabel;
 
   document.getElementById('confirm-icon').className='confirm-icon '+currentType;
@@ -671,7 +712,8 @@ async function saveTransaction(){
   const amount=parseFloat(rawAmount);
   const catDef=(currentType==='in'?CATS_IN:CATS_OUT).find(c=>c.label===selectedCat);
   const manual=document.getElementById('m-manual').value.trim();
-  const keterangan=manual||(selectedSubCat?`${selectedCat} · ${selectedSubCat}`:selectedCat);
+  const isTransfer=catDef&&catDef.transfer;
+  const keterangan=isTransfer?`Transfer Dompet: ${transferFrom} → ${transferTo}`:(manual||(selectedSubCat?`${selectedCat} · ${selectedSubCat}`:selectedCat));
 
   const btn=document.getElementById('modal-save-btn');
   btn.innerHTML='<span class="spinner"></span>Menyimpan...'; btn.disabled=true;
@@ -688,14 +730,26 @@ async function saveTransaction(){
   };
 
   try{
-    await fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    if(editingTxId){
-      const idx=allTx.findIndex(t=>t.id===editingTxId);
-      if(idx>-1) allTx[idx]={...allTx[idx],...{Tanggal:tanggal,Username:userName,Tipe:currentType,Kategori:selectedCat,SubKategori:selectedSubCat||'',Keterangan:keterangan,Nominal:amount,Kantong:selectedWallet}};
-      toast('✅ Transaksi diperbarui!');
+    if(isTransfer){
+      const idOut='tx_'+Date.now()+'_out';
+      const idIn='tx_'+(Date.now()+1)+'_in';
+      const pOut={tanggal,username:userName,tipe:'out',kategori:'Transfer Dompet',subkategori:'',keterangan,nominal:amount,kantong:transferFrom,id:idOut,action:'add'};
+      const pIn={tanggal,username:userName,tipe:'in',kategori:'Transfer Dompet',subkategori:'',keterangan,nominal:amount,kantong:transferTo,id:idIn,action:'add'};
+      await fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(pOut)});
+      await fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(pIn)});
+      allTx.unshift({id:idIn,Tanggal:tanggal,Username:userName,Tipe:'in',Kategori:'Transfer Dompet',Keterangan:keterangan,Nominal:amount,Kantong:transferTo});
+      allTx.unshift({id:idOut,Tanggal:tanggal,Username:userName,Tipe:'out',Kategori:'Transfer Dompet',Keterangan:keterangan,Nominal:amount,Kantong:transferFrom});
+      toast('✅ Transfer berhasil!');
     } else {
-      allTx.unshift({id:txId,Tanggal:tanggal,Username:userName,Tipe:currentType,Kategori:selectedCat,SubKategori:selectedSubCat||'',Keterangan:keterangan,Nominal:amount,Kantong:selectedWallet});
-      toast('✅ Transaksi tersimpan!');
+      await fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      if(editingTxId){
+        const idx=allTx.findIndex(t=>t.id===editingTxId);
+        if(idx>-1) allTx[idx]={...allTx[idx],...{Tanggal:tanggal,Username:userName,Tipe:currentType,Kategori:selectedCat,SubKategori:selectedSubCat||'',Keterangan:keterangan,Nominal:amount,Kantong:selectedWallet}};
+        toast('✅ Transaksi diperbarui!');
+      } else {
+        allTx.unshift({id:txId,Tanggal:tanggal,Username:userName,Tipe:currentType,Kategori:selectedCat,SubKategori:selectedSubCat||'',Keterangan:keterangan,Nominal:amount,Kantong:selectedWallet});
+        toast('✅ Transaksi tersimpan!');
+      }
     }
     updateBalanceDisplay();
     closeModal();
@@ -744,16 +798,25 @@ async function loadTx(){
 }
 
 /* ── HISTORY ── */
+function clearDateFilter(){ document.getElementById('filter-date').value=''; renderHistory(); }
 function renderHistory(){
   const list=document.getElementById('history-list');
   if(!allTx.length){ list.innerHTML='<p class="empty-msg">Belum ada transaksi.</p>'; return; }
+  const filterDate=document.getElementById('filter-date')?.value;
+  let filtered=allTx;
+  if(filterDate){
+    const fd=new Date(filterDate);
+    const fdStr=fd.toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric'});
+    filtered=allTx.filter(t=>t.Tanggal===fdStr);
+  }
+  if(!filtered.length){ list.innerHTML='<p class="empty-msg">Tidak ada transaksi pada tanggal ini.</p>'; return; }
   let html='', lastDate='';
-  allTx.forEach(tx=>{
+  filtered.forEach(tx=>{
     if(tx.Tanggal!==lastDate){ html+=`<p class="history-date-label">${tx.Tanggal||'–'}</p>`; lastDate=tx.Tanggal; }
     const dc=tx.Tipe==='in'?'in':'out';
     const sign=tx.Tipe==='in'?'+':'-';
     const dotClass=tx.Kantong==='Tabungan'?'dot-tab':'dot-ops';
-    const iconMap={'Freelance':'ti-briefcase','Payment WaGoMu':'ti-building-bank','Jualan':'ti-shopping-bag','Nabung':'ti-piggy-bank','Belanja Bulanan':'ti-basket','Jajan':'ti-tools-kitchen-2','Bensin':'ti-gas-station','Tagihan':'ti-receipt','Butuh':'ti-tool','Lainnya':'ti-dots'};
+    const iconMap={'Freelance':'ti-briefcase','Payment WaGoMu':'ti-building-bank','Jualan':'ti-shopping-bag','Nabung':'ti-piggy-bank','Belanja Bulanan':'ti-basket','Jajan':'ti-tools-kitchen-2','Bensin':'ti-gas-station','Tagihan':'ti-receipt','Healing':'ti-walk','Narik Uang':'ti-cash','Butuh':'ti-tool','Transfer Dompet':'ti-transfer','Lainnya':'ti-dots'};
     const icon=iconMap[tx.Kategori]||'ti-receipt';
     const label=tx.SubKategori?`${tx.Kategori} · ${tx.SubKategori}`:tx.Kategori;
     html+=`<div class="tx-item">
@@ -833,6 +896,27 @@ function buildChart(){
 }
 
 function formatRp(v){ return 'Rp'+Math.abs(parseFloat(v)||0).toLocaleString('id-ID'); }
+
+// Tap & Hold reveal
+let holdTimers={};
+function holdReveal(w){
+  holdTimers[w]=setTimeout(()=>{
+    const el=document.getElementById('w-'+w==='tab'?'w-tabungan':'w-operasional'.replace('ops','operasional'));
+    // simpler:
+    const elId = w==='tab'?'w-tabungan':'w-operasional';
+    const val = w==='tab'?calcSaldo('Tabungan'):calcSaldo('Operasional');
+    const neg = val<0;
+    document.getElementById(elId).textContent=(neg?'-':'')+formatRp(val);
+    document.getElementById(elId).classList.toggle('negative',neg);
+  },600);
+}
+function hideReveal(w){
+  clearTimeout(holdTimers[w]);
+  const elId=w==='tab'?'w-tabungan':'w-operasional';
+  if(!isBlurred) return; // if already showing, don't hide
+  document.getElementById(elId).textContent='Rp*******';
+  document.getElementById(elId).classList.remove('negative');
+}
 </script>
 </body>
 </html>
