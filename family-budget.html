@@ -60,7 +60,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .wc-amount.negative { color: #ffb3b3; }
 
 /* ACTIONS CARD */
-.actions-card { background: var(--bg-body); flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1.5rem; transition: background 0.3s; overflow: hidden; }
+.actions-card { background: var(--bg-body); flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1.5rem; transition: background 0.3s; }
 
 .actions-grid { display: flex; gap: 48px; align-items: center; justify-content: center; }
 .qa-btn { display: flex; flex-direction: column; align-items: center; gap: 14px; background: none; border: none; cursor: pointer; padding: 0; }
@@ -218,19 +218,19 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .balance-total-val { color: rgba(255,255,255,0.75); font-size: 12px; font-weight: 500; }
 
 /* SLIDE SYSTEM */
-.slide-container { border-radius: 28px 28px 0 0; flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+.slide-container { border-radius: 28px 28px 0 0; flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; background: var(--bg-body); }
 .slide-dots { display: flex; justify-content: center; gap: 6px; padding: 10px 0 6px; background: var(--bg-body); flex-shrink: 0; transition: background 0.3s; }
 .slide-dot { width: 6px; height: 6px; border-radius: 50%; background: #d0d0d0; border: none; cursor: pointer; padding: 0; transition: background 0.2s, width 0.2s; }
 .slide-dot.active { background: var(--primary); width: 18px; border-radius: 3px; }
 .slides-wrapper { flex: 1; overflow: hidden; width: 100%; min-height: 0; position: relative; }
 .slides-inner { display: flex; width: 100%; height: 100%; transition: transform 0.35s cubic-bezier(.4,0,.2,1); }
-.slide-panel { flex: 0 0 100%; width: 100%; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.slide-panel { flex: 0 0 100%; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
 
 /* SLIDE 1 — actions */
 .actions-inner { display: flex; gap: 48px; align-items: center; justify-content: center; }
 
 /* SLIDE 2 — Kantong Impian */
-.goals-panel { width: 100%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0.75rem 1rem 1rem; }
+.goals-panel { width: 100%; flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0.75rem 1rem 1rem; min-height: 0; }
 .goals-digembok { background: rgba(46,125,82,0.1); border: 1px solid rgba(46,125,82,0.2); border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
 .goals-digembok-label { font-size: 12px; color: #2e7d52; font-weight: 500; display: flex; align-items: center; gap: 5px; }
 .goals-digembok-val { font-size: 14px; font-weight: 600; color: #2e7d52; }
@@ -252,6 +252,38 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .goal-bar-fill { height: 7px; border-radius: 4px; background: #2e7d52; transition: width 0.4s ease; }
 .goal-bar-fill.done { background: #f0a500; }
 .goal-archived-badge { font-size: 10px; color: #888; background: #f0f0f0; border-radius: 4px; padding: 2px 6px; margin-top: 4px; display: inline-block; }
+
+/* GOAL MINI POPUP */
+.goal-card-wrap { position: relative; }
+.goal-mini-popup { display: none; position: absolute; top: 50%; right: 10px; transform: translateY(-50%); background: #fff; border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.16); z-index: 300; padding: 6px; min-width: 180px; }
+.goal-mini-popup.open { display: block; }
+.goal-popup-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 13px; border: none; background: none; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; text-align: left; }
+.goal-popup-btn:active { background: #f4f6fb; }
+.goal-popup-btn.add { color: #2e7d52; }
+.goal-popup-btn.add i { font-size: 18px; color: #2e7d52; }
+.goal-popup-btn.withdraw { color: #ba7517; }
+.goal-popup-btn.withdraw i { font-size: 18px; color: #ba7517; }
+.goal-popup-divider { height: 1px; background: #f0f0f0; margin: 2px 0; }
+
+/* GOAL CONFIRM SHEET */
+.goal-confirm-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 600; align-items: flex-end; }
+.goal-confirm-overlay.open { display: flex; }
+.goal-confirm-sheet { background: #fff; border-radius: 24px 24px 0 0; padding: 1.25rem 1.25rem max(env(safe-area-inset-bottom,0px),1.25rem); width: 100%; }
+.goal-confirm-handle { width: 36px; height: 4px; background: #e0e0e0; border-radius: 2px; margin: 0 auto 1rem; }
+.goal-confirm-title { font-size: 16px; font-weight: 600; color: #3a3a3a; margin-bottom: 4px; }
+.goal-confirm-meta { font-size: 13px; color: #888; margin-bottom: 1.25rem; }
+.goal-confirm-amount-row { background: #f4f6fb; border-radius: 12px; padding: 14px; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; }
+.goal-confirm-amount-label { font-size: 13px; color: #666; }
+.goal-confirm-amount-val { font-size: 17px; font-weight: 700; }
+.goal-confirm-amount-val.add { color: #2e7d52; }
+.goal-confirm-amount-val.withdraw { color: #ba7517; }
+.goal-confirm-result { font-size: 13px; color: #888; margin-bottom: 1.25rem; text-align: center; }
+.goal-confirm-result span { font-weight: 600; color: #3a3a3a; }
+.goal-confirm-btns { display: flex; gap: 10px; }
+.goal-confirm-cancel { flex: 1; padding: 13px; border: 1.5px solid #DADADA; background: #fff; border-radius: 12px; font-size: 15px; font-weight: 500; color: #666; cursor: pointer; }
+.goal-confirm-ok { flex: 2; padding: 13px; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; color: #fff; cursor: pointer; }
+.goal-confirm-ok.add { background: #2e7d52; }
+.goal-confirm-ok.withdraw { background: #ba7517; }
 .add-goal-btn { width: 100%; padding: 13px; border-radius: 14px; border: 1.5px dashed #DADADA; background: #fff; font-size: 14px; color: #888; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 2px; }
 .add-goal-btn i { font-size: 18px; }
 .archive-toggle { font-size: 12px; color: #5D7599; background: none; border: none; cursor: pointer; padding: 4px 0; text-align: center; width: 100%; margin-top: 4px; }
@@ -354,7 +386,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
             </button>
           </div>
         </div>
-        <div class="slide-panel actions-card" style="align-items:stretch;justify-content:flex-start;padding:0;">
+        <div class="slide-panel" style="background:var(--bg-body);align-items:stretch;justify-content:flex-start;overflow:hidden;">
           <div class="goals-panel" id="goals-panel"></div>
         </div>
       </div>
@@ -542,6 +574,28 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     <div class="del-confirm-btns">
       <button class="del-cancel" onclick="closeGoalDelete()">Batal</button>
       <button class="del-ok" onclick="confirmGoalDelete()">Hapus</button>
+    </div>
+  </div>
+</div>
+
+<!-- GOAL CONFIRM SHEET -->
+<div class="goal-confirm-overlay" id="goal-confirm-overlay">
+  <div class="goal-confirm-sheet">
+    <div class="goal-confirm-handle"></div>
+    <p class="goal-confirm-title" id="gc-title">Tambah Tabungan</p>
+    <p class="goal-confirm-meta" id="gc-meta">–</p>
+    <div id="gc-input-wrap">
+      <label class="modal-label" id="gc-amount-label">Jumlah ditambahkan (Rp)</label>
+      <input class="modal-input" type="text" inputmode="numeric" id="gc-amount-input" placeholder="0" oninput="onGcAmountInput(this)" />
+    </div>
+    <div class="goal-confirm-amount-row">
+      <span class="goal-confirm-amount-label">Total setelah ini</span>
+      <span class="goal-confirm-amount-val" id="gc-amount-val">Rp0</span>
+    </div>
+    <p class="goal-confirm-result">Terkumpul akan menjadi: <span id="gc-result-val">–</span></p>
+    <div class="goal-confirm-btns">
+      <button class="goal-confirm-cancel" onclick="closeGoalConfirm()">Batal</button>
+      <button class="goal-confirm-ok" id="gc-ok-btn" onclick="confirmGoalTransaction()">Simpan</button>
     </div>
   </div>
 </div>
@@ -1162,28 +1216,40 @@ function renderGoals(){
 function goalCardHTML(g){
   const pct = g.target>0 ? Math.min(100, Math.round((g.terkumpul/g.target)*100)) : 0;
   const done = pct>=100;
-  return `<div class="goal-card${g.archived?' archived':''}">
-    <div class="goal-card-top">
-      <div>
-        <div class="goal-card-name">
-          <span class="goal-card-emoji">${g.emoji||'🎯'}</span>
-          ${g.nama}
+  const safeName = g.nama.replace(/'/g,"\'").replace(/"/g,'&quot;');
+  return `<div class="goal-card-wrap">
+    <div class="goal-card${g.archived?' archived':''}" onclick="toggleGoalPopup(event,'${g.id}')">
+      <div class="goal-card-top">
+        <div>
+          <div class="goal-card-name">
+            <span class="goal-card-emoji">${g.emoji||'🎯'}</span>
+            ${g.nama}
+          </div>
+          <div class="goal-card-target">Target: ${formatRp(g.target)}</div>
+          ${g.archived?'<span class="goal-archived-badge">Diarsipkan</span>':''}
         </div>
-        <div class="goal-card-target">Target: ${formatRp(g.target)}</div>
-        ${g.archived?'<span class="goal-archived-badge">Diarsipkan</span>':''}
+        <div class="goal-card-actions">
+          <button class="goal-action-btn edit" onclick="event.stopPropagation();openGoalModal('${g.id}')"><i class="ti ti-pencil"></i></button>
+          <button class="goal-action-btn archive" onclick="event.stopPropagation();toggleArchiveGoal('${g.id}')"><i class="ti ti-${g.archived?'archive-off':'archive'}"></i></button>
+          <button class="goal-action-btn del" onclick="event.stopPropagation();openGoalDelete('${g.id}','${safeName}')"><i class="ti ti-trash"></i></button>
+        </div>
       </div>
-      <div class="goal-card-actions">
-        <button class="goal-action-btn edit" onclick="openGoalModal('${g.id}')"><i class="ti ti-pencil"></i></button>
-        <button class="goal-action-btn archive" onclick="toggleArchiveGoal('${g.id}')"><i class="ti ti-${g.archived?'archive-off':'archive'}"></i></button>
-        <button class="goal-action-btn del" onclick="openGoalDelete('${g.id}','${g.nama.replace(/'/g,"\'")}')"><i class="ti ti-trash"></i></button>
+      <div class="goal-progress-row">
+        <span class="goal-terkumpul">Terkumpul: ${formatRp(g.terkumpul||0)}</span>
+        <span class="goal-pct">${pct}%</span>
+      </div>
+      <div class="goal-bar-wrap">
+        <div class="goal-bar-fill${done?' done':''}" style="width:${pct}%"></div>
       </div>
     </div>
-    <div class="goal-progress-row">
-      <span class="goal-terkumpul">Terkumpul: ${formatRp(g.terkumpul||0)}</span>
-      <span class="goal-pct">${pct}%</span>
-    </div>
-    <div class="goal-bar-wrap">
-      <div class="goal-bar-fill${done?' done':''}" style="width:${pct}%"></div>
+    <div class="goal-mini-popup" id="popup-${g.id}">
+      <button class="goal-popup-btn add" onclick="event.stopPropagation();openGoalTx('${g.id}','add')">
+        <i class="ti ti-piggy-bank"></i> Tambah Tabungan
+      </button>
+      <div class="goal-popup-divider"></div>
+      <button class="goal-popup-btn withdraw" onclick="event.stopPropagation();openGoalTx('${g.id}','withdraw')">
+        <i class="ti ti-cash"></i> Tarik Dulu
+      </button>
     </div>
   </div>`;
 }
@@ -1299,6 +1365,86 @@ document.getElementById('g-collected').addEventListener('input', function(){
 document.getElementById('modal-goal').addEventListener('click',e=>{ if(e.target===document.getElementById('modal-goal')) closeGoalModal(); });
 document.getElementById('modal-goal-delete').addEventListener('click',e=>{ if(e.target===document.getElementById('modal-goal-delete')) closeGoalDelete(); });
 document.getElementById('pin-modal').addEventListener('click',e=>{ if(e.target===document.getElementById('pin-modal')) closePinModal(); });
+document.getElementById('goal-confirm-overlay').addEventListener('click',e=>{ if(e.target===document.getElementById('goal-confirm-overlay')) closeGoalConfirm(); });
+
+/* ── GOAL MINI POPUP ── */
+let activePopupId = null;
+function toggleGoalPopup(e, id){
+  e.stopPropagation();
+  const popup = document.getElementById('popup-'+id);
+  if(!popup) return;
+  const isOpen = popup.classList.contains('open');
+  closeAllGoalPopups();
+  if(!isOpen){ popup.classList.add('open'); activePopupId = id; }
+}
+function closeAllGoalPopups(){
+  document.querySelectorAll('.goal-mini-popup').forEach(p=>p.classList.remove('open'));
+  activePopupId = null;
+}
+document.addEventListener('click', ()=>closeAllGoalPopups());
+
+/* ── GOAL TRANSACTION (Tambah/Tarik) ── */
+let pendingGoalTx = null; // { id, type, amount }
+
+function openGoalTx(id, type){
+  closeAllGoalPopups();
+  const goals = loadGoals();
+  const g = goals.find(x=>x.id===id);
+  if(!g) return;
+
+  pendingGoalTx = { id, type, nama: g.nama, emoji: g.emoji||'🎯', currentTerkumpul: +(g.terkumpul||0) };
+
+  document.getElementById('gc-title').textContent = type==='add' ? '💰 Tambah Tabungan' : '💸 Tarik Dulu';
+  document.getElementById('gc-meta').textContent = `${g.emoji||'🎯'} ${g.nama} · Terkumpul: ${formatRp(g.terkumpul||0)}`;
+  document.getElementById('gc-amount-label').textContent = type==='add' ? 'Jumlah ditambahkan' : 'Jumlah ditarik';
+  const amtEl = document.getElementById('gc-amount-val');
+  amtEl.textContent = 'Rp0';
+  amtEl.className = 'goal-confirm-amount-val ' + type;
+  document.getElementById('gc-result-val').textContent = formatRp(g.terkumpul||0);
+  document.getElementById('gc-input-wrap').style.display = 'block';
+  document.getElementById('gc-amount-input').value = '';
+  const okBtn = document.getElementById('gc-ok-btn');
+  okBtn.textContent = type==='add' ? 'Simpan Tabungan' : 'Tarik Dana';
+  okBtn.className = 'goal-confirm-ok ' + type;
+
+  document.getElementById('goal-confirm-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('gc-amount-input').focus(), 300);
+}
+
+function closeGoalConfirm(){
+  document.getElementById('goal-confirm-overlay').classList.remove('open');
+  pendingGoalTx = null;
+}
+
+function onGcAmountInput(inp){
+  if(!pendingGoalTx) return;
+  const raw = inp.value.replace(/\./g,'').replace(/,/g,'');
+  inp.value = raw ? parseInt(raw).toLocaleString('id-ID') : '';
+  const amount = parseInt(raw)||0;
+  const cur = pendingGoalTx.currentTerkumpul;
+  const newVal = pendingGoalTx.type==='add' ? cur+amount : Math.max(0,cur-amount);
+  document.getElementById('gc-amount-val').textContent = formatRp(amount);
+  document.getElementById('gc-result-val').textContent = formatRp(newVal);
+}
+
+function confirmGoalTransaction(){
+  if(!pendingGoalTx) return;
+  const raw = document.getElementById('gc-amount-input').value.replace(/\./g,'').replace(/,/g,'');
+  const amount = parseInt(raw)||0;
+  if(amount<=0){ toast('Masukkan nominal terlebih dahulu'); return; }
+  const cur = pendingGoalTx.currentTerkumpul;
+  const newTerkumpul = pendingGoalTx.type==='add' ? cur+amount : Math.max(0,cur-amount);
+  const goals = loadGoals();
+  const idx = goals.findIndex(g=>g.id===pendingGoalTx.id);
+  if(idx>-1){
+    goals[idx].terkumpul = newTerkumpul;
+    saveGoals(goals);
+    renderGoals();
+    updateBalanceDisplay();
+    toast(pendingGoalTx.type==='add' ? 'Tabungan bertambah ✓' : 'Dana berhasil ditarik ✓');
+  }
+  closeGoalConfirm();
+}
 
 </script>
 </body>
