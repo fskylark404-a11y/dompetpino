@@ -61,7 +61,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
 /* ACTIONS CARD */
 .actions-card { background: var(--bg-body); flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1.5rem; transition: background 0.3s; overflow: hidden; }
-.slide-container { border-radius: 28px 28px 0 0; overflow: hidden; }
+
 .actions-grid { display: flex; gap: 48px; align-items: center; justify-content: center; }
 .qa-btn { display: flex; flex-direction: column; align-items: center; gap: 14px; background: none; border: none; cursor: pointer; padding: 0; }
 .qa-btn:active { opacity: 0.75; transform: scale(0.95); }
@@ -218,14 +218,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .balance-total-val { color: rgba(255,255,255,0.75); font-size: 12px; font-weight: 500; }
 
 /* SLIDE SYSTEM */
-.slide-container { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.slide-container { border-radius: 28px 28px 0 0; flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
 .slide-dots { display: flex; justify-content: center; gap: 6px; padding: 10px 0 6px; background: var(--bg-body); flex-shrink: 0; transition: background 0.3s; }
 .slide-dot { width: 6px; height: 6px; border-radius: 50%; background: #d0d0d0; border: none; cursor: pointer; padding: 0; transition: background 0.2s, width 0.2s; }
 .slide-dot.active { background: var(--primary); width: 18px; border-radius: 3px; }
-.slides-wrapper { flex: 1; display: flex; overflow: hidden; }
-.slide-panel { min-width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: transform 0.35s cubic-bezier(.4,0,.2,1); }
-.slides-inner { display: flex; width: 200%; height: 100%; transition: transform 0.35s cubic-bezier(.4,0,.2,1); }
-.slides-inner .slide-panel { width: 50%; }
+.slides-wrapper { flex: 1; overflow: hidden; width: 100%; min-height: 0; position: relative; }
+.slides-inner { display: flex; width: 100%; height: 100%; transition: transform 0.35s cubic-bezier(.4,0,.2,1); }
+.slide-panel { flex: 0 0 100%; width: 100%; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 
 /* SLIDE 1 — actions */
 .actions-inner { display: flex; gap: 48px; align-items: center; justify-content: center; }
@@ -530,7 +529,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     <input class="modal-input" type="text" inputmode="numeric" id="g-target" placeholder="0" />
     <label class="modal-label">Sudah Terkumpul (Rp)</label>
     <input class="modal-input" type="text" inputmode="numeric" id="g-collected" placeholder="0" />
-    <button class="modal-submit" id="goal-submit-btn" onclick="saveGoal()">Simpan Kantong</button>
+    <button class="save-btn" style="background:var(--primary);margin-top:8px;" id="goal-submit-btn" onclick="saveGoal()">Simpan Kantong</button>
   </div>
 </div>
 
@@ -1087,7 +1086,7 @@ function hideReveal(w){
 let currentSlide = 0;
 function goSlide(n){
   currentSlide = n;
-  document.getElementById('slides-inner').style.transform = `translateX(-${n*50}%)`;
+  document.getElementById('slides-inner').style.transform = `translateX(-${n*100}%)`;
   document.querySelectorAll('.slide-dot').forEach((d,i)=>d.classList.toggle('active',i===n));
   if(n===1) renderGoals();
 }
