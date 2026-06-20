@@ -1007,9 +1007,13 @@ async function loadTx(){
     const json=await res.json();
     if(json.status==='ok'){
       allTx=json.data.reverse().map((t,i)=>({...t,id:t.id||'tx_legacy_'+i}));
+      // DEBUG: show unique usernames found in Sheet vs current userLogin
+      const uniqueUsers=[...new Set(allTx.map(t=>getUsername(t)).filter(Boolean))];
+      const myCount=allTx.filter(t=>isMyTx(t)).length;
+      toast(`Login: ${userLogin} | Sheet users: ${uniqueUsers.join(', ')} | Matched: ${myCount}`, 6000);
       updateBalanceDisplay();
     }
-  } catch(e){}
+  } catch(e){ toast('Gagal load: '+e.message, 4000); }
 }
 
 /* ── HISTORY ── */
