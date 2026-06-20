@@ -805,15 +805,16 @@ function getTotalKontribusi(g){
 function calcBebasPakai(){
   const total=calcSaldo();
   const goals=loadGoals().filter(g=>!g.archived);
-  // Digembok = only MY contributions
-  const digembok=goals.reduce((s,g)=>s+getMyKontribusi(g),0);
+  // Digembok = only MY contributions, capped at total saldo
+  const digembok=Math.min(total, goals.reduce((s,g)=>s+getMyKontribusi(g),0));
   return total-digembok;
 }
 function updateBalanceDisplay(){
   const total=calcSaldo();
   const tab=calcSaldo('Tabungan');
   const ops=calcSaldo('Operasional');
-  const bebas=calcBebasPakai();
+  const digembok=loadGoals().filter(g=>!g.archived).reduce((s,g)=>s+getMyKontribusi(g),0);
+  const bebas=total-Math.min(total,digembok);
   const fmt=(v,el)=>{ const neg=v<0; el.textContent=(neg?'-':'')+formatRp(v); el.classList.toggle('negative',neg); };
   if(isBlurred){
     document.getElementById('total-balance').textContent='Rp*******';
@@ -862,6 +863,9 @@ function openModal(type,editData){
     selectWallet(editData.Kantong);
     titleEl.textContent=(type==='in'?'✏️ Edit Cash In':'✏️ Edit Cash Out');
   } else { updateWalletBtns(); }
+  // Always reset save button when opening
+  const saveBtn=document.getElementById('modal-save-btn');
+  if(saveBtn){ saveBtn.disabled=false; saveBtn.innerHTML='Lanjut →'; }
   document.getElementById('modal-add').classList.add('open');
 }
 function closeModal(){
@@ -869,6 +873,9 @@ function closeModal(){
   editingTxId=null;
   rawAmount='';
   document.getElementById('m-amount').value='';
+  // Always reset save button state
+  const btn=document.getElementById('modal-save-btn');
+  if(btn){ btn.disabled=false; btn.innerHTML='Lanjut →'; }
 }
 document.getElementById('modal-add').addEventListener('click',e=>{ if(e.target===document.getElementById('modal-add')) closeModal(); });
 
