@@ -1212,8 +1212,9 @@ function goalCardHTML(g){
   const done=pct>=100;
   const safeName=g.nama.replace(/'/g,"\\'").replace(/"/g,'&quot;');
   const myLabel=myTerkumpul>0?` <span style="color:#5D7599;font-size:10px;">(kamu: ${formatRp(myTerkumpul)})</span>`:'';
+  const gid=String(g.id);
   return `<div class="goal-card-wrap">
-    <div class="goal-card${g.archived?' archived':''}" onclick="toggleGoalPopup(event,'${g.id}')">
+    <div class="goal-card${g.archived?' archived':''}" onclick="toggleGoalPopup(event,'${gid}')">
       <div class="goal-card-top">
         <div>
           <div class="goal-card-name"><span class="goal-card-emoji">${g.emoji||'🎯'}</span>${g.nama}</div>
@@ -1221,9 +1222,9 @@ function goalCardHTML(g){
           ${g.archived?'<span class="goal-archived-badge">Diarsipkan</span>':''}
         </div>
         <div class="goal-card-actions">
-          <button class="goal-action-btn edit" onclick="event.stopPropagation();openGoalModal('${g.id}')"><i class="ti ti-pencil"></i></button>
-          <button class="goal-action-btn archive" onclick="event.stopPropagation();toggleArchiveGoal('${g.id}')"><i class="ti ti-${g.archived?'archive-off':'archive'}"></i></button>
-          <button class="goal-action-btn del" onclick="event.stopPropagation();openGoalDelete('${g.id}','${safeName}')"><i class="ti ti-trash"></i></button>
+          <button class="goal-action-btn edit" onclick="event.stopPropagation();openGoalModal('${gid}')"><i class="ti ti-pencil"></i></button>
+          <button class="goal-action-btn archive" onclick="event.stopPropagation();toggleArchiveGoal('${gid}')"><i class="ti ti-${g.archived?'archive-off':'archive'}"></i></button>
+          <button class="goal-action-btn del" onclick="event.stopPropagation();openGoalDelete('${gid}','${safeName}')"><i class="ti ti-trash"></i></button>
         </div>
       </div>
       <div class="goal-progress-row">
@@ -1231,13 +1232,13 @@ function goalCardHTML(g){
         <span class="goal-pct">${pct}%</span>
       </div>
       <div class="goal-bar-wrap"><div class="goal-bar-fill${done?' done':''}" style="width:${pct}%"></div></div>
-      <button class="goal-expand-btn" id="ghbtn-${g.id}" onclick="toggleGoalHistory(event,'${g.id}')">▼ Lihat histori</button>
-      <div class="goal-history-wrap" id="gh-${g.id}"></div>
+      <button class="goal-expand-btn" id="ghbtn-${gid}" onclick="toggleGoalHistory(event,'${gid}')">▼ Lihat histori</button>
+      <div class="goal-history-wrap" id="gh-${gid}"></div>
     </div>
-    <div class="goal-mini-popup" id="popup-${g.id}">
-      <button class="goal-popup-btn add" onclick="event.stopPropagation();openGoalTx('${g.id}','add')"><i class="ti ti-piggy-bank"></i> Tambah Tabungan</button>
+    <div class="goal-mini-popup" id="popup-${gid}">
+      <button class="goal-popup-btn add" onclick="event.stopPropagation();openGoalTx('${gid}','add')"><i class="ti ti-piggy-bank"></i> Tambah Tabungan</button>
       <div class="goal-popup-divider"></div>
-      <button class="goal-popup-btn withdraw" onclick="event.stopPropagation();openGoalTx('${g.id}','withdraw')"><i class="ti ti-cash"></i> Tarik Dulu</button>
+      <button class="goal-popup-btn withdraw" onclick="event.stopPropagation();openGoalTx('${gid}','withdraw')"><i class="ti ti-cash"></i> Tarik Dulu</button>
     </div>
   </div>`;
 }
@@ -1274,7 +1275,7 @@ function toggleArchived(){ showArchived=!showArchived; renderGoals(); }
 function openGoalModal(id){
   editingGoalId=id||null;
   const goals=loadGoals();
-  const g=id?goals.find(x=>x.id===id):null;
+  const g=id?goals.find(x=>String(x.id)===String(id)):null;
   document.getElementById('goal-modal-title').textContent=g?'Edit Kantong':'Kantong Impian Baru';
   document.getElementById('g-name').value=g?g.nama:'';
   document.getElementById('g-target').value=g&&g.target?parseInt(g.target).toLocaleString('id-ID'):'';
@@ -1303,7 +1304,7 @@ async function saveGoal(){
   if(editingGoalId){
     // Only update meta, preserve kontribusi
     const goalData={id:editingGoalId,nama,emoji,target};
-    if(cachedGoals){ const idx=cachedGoals.findIndex(g=>g.id===editingGoalId); if(idx>-1) cachedGoals[idx]={...cachedGoals[idx],...goalData,updatedBy:userName}; }
+    if(cachedGoals){ const idx=cachedGoals.findIndex(g=>String(g.id)===String(editingGoalId)); if(idx>-1) cachedGoals[idx]={...cachedGoals[idx],...goalData,updatedBy:userName}; }
     await saveGoalToSheet(goalData,'editGoal');
     toast('Kantong diperbarui ✓');
   } else {
@@ -1321,7 +1322,7 @@ async function saveGoal(){
 
 async function toggleArchiveGoal(id){
   const goals=loadGoals();
-  const idx=goals.findIndex(g=>g.id===id);
+  const idx=goals.findIndex(g=>String(g.id)===String(id));
   if(idx>-1){
     const newArchived=!goals[idx].archived;
     if(cachedGoals){ const ci=cachedGoals.findIndex(g=>g.id===id); if(ci>-1) cachedGoals[ci].archived=newArchived; }
@@ -1340,7 +1341,7 @@ function openGoalDelete(id,nama){
 function closeGoalDelete(){ document.getElementById('modal-goal-delete').classList.remove('open'); deleteGoalId=null; }
 async function confirmGoalDelete(){
   if(!deleteGoalId) return;
-  if(cachedGoals) cachedGoals=cachedGoals.filter(g=>g.id!==deleteGoalId);
+  if(cachedGoals) cachedGoals=cachedGoals.filter(g=>String(g.id)!==String(deleteGoalId));
   await saveGoalToSheet({id:deleteGoalId},'deleteGoal');
   closeGoalDelete(); renderGoals(); updateBalanceDisplay();
   toast('Kantong dihapus');
@@ -1358,7 +1359,7 @@ document.getElementById('goal-confirm-overlay').addEventListener('click',e=>{ if
 let activePopupId=null;
 function toggleGoalPopup(e,id){
   e.stopPropagation();
-  const popup=document.getElementById('popup-'+id); if(!popup) return;
+  const popup=document.getElementById('popup-'+String(id)); if(!popup) return;
   const isOpen=popup.classList.contains('open');
   closeAllGoalPopups();
   if(!isOpen){ popup.classList.add('open'); activePopupId=id; }
@@ -1371,15 +1372,26 @@ let pendingGoalTx=null;
 function openGoalTx(id,type){
   closeAllGoalPopups();
   const goals=loadGoals();
-  const g=goals.find(x=>x.id===id); if(!g) return;
-  const myAmt=getMyKontribusi(g);
-  pendingGoalTx={id,type,nama:g.nama,emoji:g.emoji||'🎯',currentTerkumpul:myAmt,kontribusi:g.kontribusi||{}};
+  const g=goals.find(x=>String(x.id)===String(id));
+  if(!g){ toast('Data kantong tidak ditemukan, coba refresh.'); return; }
+  // Normalize kontribusi — could be string, object, or undefined
+  let kontribusiObj={};
+  if(g.kontribusi){
+    if(typeof g.kontribusi==='string'){
+      try{ kontribusiObj=JSON.parse(g.kontribusi); }catch(e){ kontribusiObj={}; }
+    } else if(typeof g.kontribusi==='object'){
+      kontribusiObj=g.kontribusi;
+    }
+  }
+  const myAmt=+kontribusiObj[userLogin]||0;
+  const totalAmt=getTotalKontribusi(g);
+  pendingGoalTx={id,type,nama:g.nama,emoji:g.emoji||'🎯',currentTerkumpul:myAmt,kontribusi:kontribusiObj};
   document.getElementById('gc-title').textContent=type==='add'?'💰 Tambah Tabungan':'💸 Tarik Dulu';
   document.getElementById('gc-meta').textContent=`${g.emoji||'🎯'} ${g.nama} · Kontribusimu: ${formatRp(myAmt)}`;
   document.getElementById('gc-amount-label').textContent=type==='add'?'Jumlah ditambahkan':'Jumlah ditarik';
   const amtEl=document.getElementById('gc-amount-val');
   amtEl.textContent='Rp0'; amtEl.className='goal-confirm-amount-val '+type;
-  document.getElementById('gc-result-val').textContent=formatRp(g.terkumpul||0);
+  document.getElementById('gc-result-val').textContent=formatRp(myAmt);
   document.getElementById('gc-input-wrap').style.display='block';
   document.getElementById('gc-amount-input').value='';
   const okBtn=document.getElementById('gc-ok-btn');
@@ -1406,11 +1418,11 @@ async function confirmGoalTransaction(){
   if(amount<=0){ toast('Masukkan nominal terlebih dahulu'); return; }
   const cur=pendingGoalTx.currentTerkumpul;
   const newMyAmt=pendingGoalTx.type==='add'?cur+amount:Math.max(0,cur-amount);
-  // Build updated kontribusi object
-  const k=pendingGoalTx.kontribusi&&typeof pendingGoalTx.kontribusi==='string'?JSON.parse(pendingGoalTx.kontribusi):(pendingGoalTx.kontribusi||{});
+  // Build updated kontribusi object — always object now from openGoalTx
+  const k=Object.assign({},pendingGoalTx.kontribusi||{});
   k[userLogin]=newMyAmt;
   const newKontribusi=JSON.stringify(k);
-  if(cachedGoals){ const idx=cachedGoals.findIndex(g=>g.id===pendingGoalTx.id); if(idx>-1) cachedGoals[idx].kontribusi=newKontribusi; }
+  if(cachedGoals){ const idx=cachedGoals.findIndex(g=>String(g.id)===String(pendingGoalTx.id)); if(idx>-1) cachedGoals[idx].kontribusi=newKontribusi; }
   const now=new Date();
   const tgl=now.toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric'});
   const histRecord={
