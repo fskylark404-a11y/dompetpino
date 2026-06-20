@@ -637,16 +637,24 @@ const CAT_COLORS = ['#ba7517','#5D7599','#2e7d52','#C2C4B6','#ABB6C8','#888'];
 let isBlurred=true, currentType='in', rawAmount='', userName='', userLogin='', allTx=[], chartObj=null;
 // Match all username variants for current user
 function getUsername(t){
-  // Handle any case variation of the column header from Sheet
-  return (t.Username||t.username||t.USERNAME||t.UserName||'').toString().trim();
+  // Try every possible key variant from Sheet headers
+  for(const k of ['Username','username','USERNAME','UserName','USERNAME']){
+    if(t[k]!==undefined && t[k]!==null && t[k]!=='') return String(t[k]).trim();
+  }
+  // Last resort: scan all keys for one that looks like a username field
+  for(const k of Object.keys(t)){
+    if(k.toLowerCase()==='username') return String(t[k]).trim();
+  }
+  return '';
 }
 function isMyTx(t){
   const raw = getUsername(t);
-  if(!raw) return true; // no username stored — include
-  const u = raw.toLowerCase().replace(/\s/g,'');
-  const login = userLogin.toLowerCase();    // e.g. "cipcip25"
-  const display = userName.toLowerCase();   // e.g. "cipcip"
-  return u===login || u===display || u.startsWith(display);
+  if(!raw) return true;
+  const u = raw.toLowerCase();
+  const login = userLogin.toLowerCase();
+  const display = userName.toLowerCase();
+  // Match: exact login, exact display, or display is prefix of stored username
+  return u===login || u===display || u===login.replace(/[^a-z]/g,'') || u.startsWith(display);
 }
 let selectedCat='', selectedSubCat='', selectedWallet='Operasional';
 let editingTxId=null, deletingTxId=null;
@@ -1006,7 +1014,9 @@ async function loadTx(){
     const res=await fetch(SHEET_URL+'?t='+Date.now());
     const json=await res.json();
     if(json.status==='ok'){
-      allTx=json.data.reverse().map((t,i)=>({...t,id:t.id||'tx_legacy_'+i}));
+      allTx=json.data.reverse()
+        .map((t,i)=>({...t,id:t.id||'tx_legacy_'+i}))
+        .filter(t=>(+t.Nominal||0)>0); // filter out Rp0 garbage transactions
       // DEBUG: show unique usernames found in Sheet vs current userLogin
       const uniqueUsers=[...new Set(allTx.map(t=>getUsername(t)).filter(Boolean))];
       const myCount=allTx.filter(t=>isMyTx(t)).length;
