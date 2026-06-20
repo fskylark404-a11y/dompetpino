@@ -619,11 +619,16 @@ const CAT_COLORS = ['#ba7517','#5D7599','#2e7d52','#C2C4B6','#ABB6C8','#888'];
 
 let isBlurred=true, currentType='in', rawAmount='', userName='', userLogin='', allTx=[], chartObj=null;
 // Match all username variants for current user
+function getUsername(t){
+  // Handle any case variation of the column header from Sheet
+  return (t.Username||t.username||t.USERNAME||t.UserName||'').toString().trim();
+}
 function isMyTx(t){
-  if(!t.Username) return true;
-  const u=t.Username.toString().toLowerCase().replace(/\s/g,'');
-  const login=userLogin.toLowerCase();       // e.g. "cipcip25"
-  const display=userName.toLowerCase();      // e.g. "cipcip"
+  const raw = getUsername(t);
+  if(!raw) return true; // no username stored — include
+  const u = raw.toLowerCase().replace(/\s/g,'');
+  const login = userLogin.toLowerCase();    // e.g. "cipcip25"
+  const display = userName.toLowerCase();   // e.g. "cipcip"
   return u===login || u===display || u.startsWith(display);
 }
 let selectedCat='', selectedSubCat='', selectedWallet='Operasional';
@@ -915,26 +920,26 @@ async function saveTransaction(){
   const now=new Date();
   const tanggal=now.toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric'});
   const txId=editingTxId||('tx_'+Date.now());
-  const payload={ tanggal,username:userName,tipe:currentType,kategori:selectedCat,subkategori:selectedSubCat||'',keterangan,nominal:amount,kantong:selectedWallet,id:txId,action:editingTxId?'edit':'add' };
+  const payload={ tanggal,username:userLogin,tipe:currentType,kategori:selectedCat,subkategori:selectedSubCat||'',keterangan,nominal:amount,kantong:selectedWallet,id:txId,action:editingTxId?'edit':'add' };
   try{
     if(isTransfer){
       const idOut='tx_'+Date.now()+'_out';
       const idIn='tx_'+(Date.now()+1)+'_in';
-      const pOut={tanggal,username:userName,tipe:'out',kategori:'Transfer Dompet',subkategori:'',keterangan,nominal:amount,kantong:transferFrom,id:idOut,action:'add'};
-      const pIn={tanggal,username:userName,tipe:'in',kategori:'Transfer Dompet',subkategori:'',keterangan,nominal:amount,kantong:transferTo,id:idIn,action:'add'};
+      const pOut={tanggal,username:userLogin,tipe:'out',kategori:'Transfer Dompet',subkategori:'',keterangan,nominal:amount,kantong:transferFrom,id:idOut,action:'add'};
+      const pIn={tanggal,username:userLogin,tipe:'in',kategori:'Transfer Dompet',subkategori:'',keterangan,nominal:amount,kantong:transferTo,id:idIn,action:'add'};
       await fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(pOut)});
       await fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(pIn)});
-      allTx.unshift({id:idIn,Tanggal:tanggal,Username:userName,Tipe:'in',Kategori:'Transfer Dompet',Keterangan:keterangan,Nominal:amount,Kantong:transferTo});
-      allTx.unshift({id:idOut,Tanggal:tanggal,Username:userName,Tipe:'out',Kategori:'Transfer Dompet',Keterangan:keterangan,Nominal:amount,Kantong:transferFrom});
+      allTx.unshift({id:idIn,Tanggal:tanggal,Username:userLogin,Tipe:'in',Kategori:'Transfer Dompet',Keterangan:keterangan,Nominal:amount,Kantong:transferTo});
+      allTx.unshift({id:idOut,Tanggal:tanggal,Username:userLogin,Tipe:'out',Kategori:'Transfer Dompet',Keterangan:keterangan,Nominal:amount,Kantong:transferFrom});
       toast('✅ Transfer berhasil!');
     } else {
       await fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
       if(editingTxId){
         const idx=allTx.findIndex(t=>t.id===editingTxId);
-        if(idx>-1) allTx[idx]={...allTx[idx],...{Tanggal:tanggal,Username:userName,Tipe:currentType,Kategori:selectedCat,SubKategori:selectedSubCat||'',Keterangan:keterangan,Nominal:amount,Kantong:selectedWallet}};
+        if(idx>-1) allTx[idx]={...allTx[idx],...{Tanggal:tanggal,Username:userLogin,Tipe:currentType,Kategori:selectedCat,SubKategori:selectedSubCat||'',Keterangan:keterangan,Nominal:amount,Kantong:selectedWallet}};
         toast('✅ Transaksi diperbarui!');
       } else {
-        allTx.unshift({id:txId,Tanggal:tanggal,Username:userName,Tipe:currentType,Kategori:selectedCat,SubKategori:selectedSubCat||'',Keterangan:keterangan,Nominal:amount,Kantong:selectedWallet});
+        allTx.unshift({id:txId,Tanggal:tanggal,Username:userLogin,Tipe:currentType,Kategori:selectedCat,SubKategori:selectedSubCat||'',Keterangan:keterangan,Nominal:amount,Kantong:selectedWallet});
         toast('✅ Transaksi tersimpan!');
       }
     }
