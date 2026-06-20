@@ -709,7 +709,13 @@ function doLogout(){
   document.getElementById('logout-warning').classList.remove('show');
   switchPage('login');
   document.getElementById('login-user').value='';
-  isBlurred=true; allTx=[]; balanceVerified=false; cachedGoals=null; userLogin='';
+  isBlurred=true; allTx=[]; balanceVerified=false; cachedGoals=null; cachedGoalHistory=[]; userLogin='';
+  // Close any open modals on logout
+  ['modal-add','modal-confirm','modal-delete','modal-goal','modal-goal-delete','goal-confirm-overlay','pin-modal'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.classList.remove('open');
+  });
+  rawAmount='';
   document.getElementById('total-balance').textContent='Rp*******';
   document.getElementById('total-aset').textContent='Rp*******';
   document.getElementById('w-tabungan').textContent='Rp*******';
@@ -843,7 +849,12 @@ function openModal(type,editData){
   } else { updateWalletBtns(); }
   document.getElementById('modal-add').classList.add('open');
 }
-function closeModal(){ document.getElementById('modal-add').classList.remove('open'); editingTxId=null; }
+function closeModal(){
+  document.getElementById('modal-add').classList.remove('open');
+  editingTxId=null;
+  rawAmount='';
+  document.getElementById('m-amount').value='';
+}
 document.getElementById('modal-add').addEventListener('click',e=>{ if(e.target===document.getElementById('modal-add')) closeModal(); });
 
 function selectCat(label,skipScroll){
@@ -927,7 +938,11 @@ document.getElementById('modal-confirm').addEventListener('click',e=>{ if(e.targ
 /* ── SAVE TX ── */
 async function saveTransaction(){
   closeConfirm();
+  // Always re-read from input to avoid stale rawAmount on iOS
+  const inputVal=document.getElementById('m-amount').value.replace(/\./g,'').replace(/[^0-9]/g,'');
+  if(inputVal) rawAmount=inputVal;
   const amount=parseFloat(rawAmount);
+  if(!amount||amount<=0){ toast('Nominal tidak valid, transaksi dibatalkan.'); return; }
   const catDef=(currentType==='in'?CATS_IN:CATS_OUT).find(c=>c.label===selectedCat);
   const manual=document.getElementById('m-manual').value.trim();
   const isTransfer=catDef&&catDef.transfer;
@@ -1371,6 +1386,10 @@ document.addEventListener('click',()=>closeAllGoalPopups());
 let pendingGoalTx=null;
 function openGoalTx(id,type){
   closeAllGoalPopups();
+  // Delay to ensure popup is fully closed before opening sheet
+  setTimeout(()=>_openGoalTx(id,type), 80);
+}
+function _openGoalTx(id,type){
   const goals=loadGoals();
   const g=goals.find(x=>String(x.id)===String(id));
   if(!g){ toast('Data kantong tidak ditemukan, coba refresh.'); return; }
