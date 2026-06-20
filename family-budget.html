@@ -286,6 +286,23 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .goal-confirm-ok.add { background: #2e7d52; }
 .goal-confirm-ok.withdraw { background: #ba7517; }
 
+/* Goal history */
+.goal-history-wrap { margin-top: 10px; border-top: 0.5px solid #f0f0f0; padding-top: 8px; display: none; }
+.goal-history-wrap.open { display: block; }
+.goal-history-title { font-size: 11px; color: #aaa; font-weight: 500; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
+.goal-history-item { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; border-bottom: 0.5px solid #f8f8f8; }
+.goal-history-item:last-child { border-bottom: none; }
+.goal-history-left { display: flex; align-items: center; gap: 6px; }
+.goal-history-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.goal-history-dot.add { background: #2e7d52; }
+.goal-history-dot.withdraw { background: #ba7517; }
+.goal-history-meta { font-size: 11px; color: #888; }
+.goal-history-amt { font-size: 12px; font-weight: 600; }
+.goal-history-amt.add { color: #2e7d52; }
+.goal-history-amt.withdraw { color: #ba7517; }
+.goal-history-empty { font-size: 12px; color: #ccc; text-align: center; padding: 8px 0; }
+.goal-expand-btn { font-size: 11px; color: #5D7599; background: none; border: none; cursor: pointer; padding: 4px 0 0; width: 100%; text-align: center; }
+
 /* Goal modal */
 .goal-emoji-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; }
 .goal-emoji-btn { width: 40px; height: 40px; border-radius: 10px; border: 1.5px solid #DADADA; background: #fff; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
@@ -1010,8 +1027,7 @@ function renderHistory(){
       </div>
       <p class="tx-amount ${dc}">${sign}${formatRp(tx.Nominal)}</p>
       <div class="tx-actions">
-        <button class="tx-action-btn edit" onclick="openModal('${tx.Tipe}',${JSON.stringify(tx).replace(/"/g,'&quot;')})"><i class="ti ti-pencil"></i></button>
-        <button class="tx-action-btn del" onclick="openDelete('${tx.id}')"><i class="ti ti-trash"></i></button>
+        ${isMyTx(tx) ? `<button class="tx-action-btn edit" onclick="openModal('${tx.Tipe}',${JSON.stringify(tx).replace(/"/g,'&quot;')})"><i class="ti ti-pencil"></i></button><button class="tx-action-btn del" onclick="openDelete('${tx.id}')"><i class="ti ti-trash"></i></button>` : ''}
       </div>
     </div>`;
   });
@@ -1128,6 +1144,20 @@ function goSlide(n){
 const GOAL_EMOJIS=['🏠','🚗','✈️','📱','🎸','📚','💍','🎓','🏖️','💻','🛍️','🍜','⚽','🎮','🌱'];
 let editingGoalId=null, deleteGoalId=null, showArchived=false;
 let cachedGoals=null;
+let cachedGoalHistory=[]; // all GoalHistory records
+let expandedGoalIds=new Set(); // which cards are expanded
+
+async function fetchGoalHistory(){
+  try{
+    const res=await fetch(SHEET_URL+'?action=getGoalHistory&t='+Date.now());
+    const json=await res.json();
+    if(json.status==='ok'){ cachedGoalHistory=json.history||[]; }
+  } catch(e){ console.log('fetchGoalHistory error',e); }
+}
+function getGoalHistory(goalId){
+  return cachedGoalHistory.filter(h=>String(h.goalId)===String(goalId))
+    .sort((a,b)=>b.tanggal>a.tanggal?1:-1);
+}
 
 function loadGoals(){ return cachedGoals||[]; }
 
@@ -1137,13 +1167,16 @@ function calcDigembok(){
 
 async function fetchGoals(){
   try{
-    const res=await fetch(SHEET_URL+'?action=getGoals&t='+Date.now());
-    const json=await res.json();
-    if(json.status==='ok'){
-      cachedGoals=json.goals;
-      renderGoals();
-      updateBalanceDisplay();
-    }
+    const [goalsRes, histRes] = await Promise.all([
+      fetch(SHEET_URL+'?action=getGoals&t='+Date.now()),
+      fetch(SHEET_URL+'?action=getGoalHistory&t='+Date.now())
+    ]);
+    const goalsJson=await goalsRes.json();
+    const histJson=await histRes.json();
+    if(goalsJson.status==='ok'){ cachedGoals=goalsJson.goals; }
+    if(histJson.status==='ok'){ cachedGoalHistory=histJson.history||[]; }
+    renderGoals();
+    updateBalanceDisplay();
   } catch(e){ console.log('fetchGoals error',e); }
 }
 
@@ -1198,6 +1231,8 @@ function goalCardHTML(g){
         <span class="goal-pct">${pct}%</span>
       </div>
       <div class="goal-bar-wrap"><div class="goal-bar-fill${done?' done':''}" style="width:${pct}%"></div></div>
+      <button class="goal-expand-btn" id="ghbtn-${g.id}" onclick="toggleGoalHistory(event,'${g.id}')">▼ Lihat histori</button>
+      <div class="goal-history-wrap" id="gh-${g.id}"></div>
     </div>
     <div class="goal-mini-popup" id="popup-${g.id}">
       <button class="goal-popup-btn add" onclick="event.stopPropagation();openGoalTx('${g.id}','add')"><i class="ti ti-piggy-bank"></i> Tambah Tabungan</button>
@@ -1205,6 +1240,33 @@ function goalCardHTML(g){
       <button class="goal-popup-btn withdraw" onclick="event.stopPropagation();openGoalTx('${g.id}','withdraw')"><i class="ti ti-cash"></i> Tarik Dulu</button>
     </div>
   </div>`;
+}
+
+function goalHistoryHTML(goalId){
+  const hist=getGoalHistory(goalId);
+  if(!hist.length) return '<p class="goal-history-empty">Belum ada histori</p>';
+  return hist.map(h=>{
+    const isAdd=h.tipe==='add';
+    const sign=isAdd?'+':'-';
+    return `<div class="goal-history-item">
+      <div class="goal-history-left">
+        <span class="goal-history-dot ${h.tipe}"></span>
+        <span class="goal-history-meta">${h.username} · ${h.tanggal}</span>
+      </div>
+      <span class="goal-history-amt ${h.tipe}">${sign}${formatRp(h.nominal)}</span>
+    </div>`;
+  }).join('');
+}
+
+function toggleGoalHistory(e, goalId){
+  e.stopPropagation();
+  const wrap=document.getElementById('gh-'+goalId);
+  const btn=document.getElementById('ghbtn-'+goalId);
+  if(!wrap) return;
+  const isOpen=wrap.classList.contains('open');
+  wrap.classList.toggle('open',!isOpen);
+  wrap.innerHTML=isOpen?'':('<div class="goal-history-title">Histori</div>'+goalHistoryHTML(goalId));
+  if(btn) btn.textContent=isOpen?'▼ Lihat histori':'▲ Sembunyikan';
 }
 
 function toggleArchived(){ showArchived=!showArchived; renderGoals(); }
@@ -1349,7 +1411,23 @@ async function confirmGoalTransaction(){
   k[userLogin]=newMyAmt;
   const newKontribusi=JSON.stringify(k);
   if(cachedGoals){ const idx=cachedGoals.findIndex(g=>g.id===pendingGoalTx.id); if(idx>-1) cachedGoals[idx].kontribusi=newKontribusi; }
-  await saveGoalToSheet({id:pendingGoalTx.id,kontribusi:newKontribusi},'editGoal');
+  const now=new Date();
+  const tgl=now.toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const histRecord={
+    id:'gh_'+Date.now(),
+    goalId:pendingGoalTx.id,
+    goalNama:pendingGoalTx.nama,
+    username:userLogin,
+    tipe:pendingGoalTx.type,
+    nominal:amount,
+    tanggal:tgl
+  };
+  // Optimistic update local history cache
+  cachedGoalHistory.unshift(histRecord);
+  await Promise.all([
+    saveGoalToSheet({id:pendingGoalTx.id,kontribusi:newKontribusi},'editGoal'),
+    saveGoalToSheet(histRecord,'addGoalHistory')
+  ]);
   renderGoals(); updateBalanceDisplay();
   toast(pendingGoalTx.type==='add'?'Tabungan bertambah ✓':'Dana berhasil ditarik ✓');
   closeGoalConfirm();
