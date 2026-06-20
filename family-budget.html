@@ -617,7 +617,7 @@ const CATS_OUT = [
 ];
 const CAT_COLORS = ['#ba7517','#5D7599','#2e7d52','#C2C4B6','#ABB6C8','#888'];
 
-let isBlurred=true, currentType='in', rawAmount='', userName='', allTx=[], chartObj=null;
+let isBlurred=true, currentType='in', rawAmount='', userName='', userLogin='', allTx=[], chartObj=null;
 let selectedCat='', selectedSubCat='', selectedWallet='Operasional';
 let editingTxId=null, deletingTxId=null;
 let logoutTimer=null, warnTimer=null;
@@ -665,7 +665,8 @@ function doLogin(){
   const u=document.getElementById('login-user').value.trim().toLowerCase();
   if(!u){ toast('Masukkan username dulu.'); return; }
   if(!USERS.includes(u)){ toast('Username tidak dikenali.'); return; }
-  userName=USER_DISPLAY[u]||u;
+  userLogin=u; // raw login key e.g. "pino18" — used to match Sheet Username column
+  userName=USER_DISPLAY[u]||u; // display name e.g. "Pino"
   document.getElementById('display-name').textContent=userName;
   switchPage('main');
   resetTimer();
@@ -678,7 +679,7 @@ function doLogout(){
   document.getElementById('logout-warning').classList.remove('show');
   switchPage('login');
   document.getElementById('login-user').value='';
-  isBlurred=true; allTx=[]; balanceVerified=false; cachedGoals=null;
+  isBlurred=true; allTx=[]; balanceVerified=false; cachedGoals=null; userLogin='';
   document.getElementById('total-balance').textContent='Rp*******';
   document.getElementById('total-aset').textContent='Rp*******';
   document.getElementById('w-tabungan').textContent='Rp*******';
@@ -731,7 +732,7 @@ document.getElementById('pin-input').addEventListener('keydown',e=>{ if(e.key===
 function calcSaldo(wallet){
   return allTx.reduce((s,t)=>{
     // Filter by current user
-    if(t.Username && t.Username.toLowerCase()!==userName.toLowerCase()) return s;
+    if(t.Username && t.Username.toLowerCase()!==userLogin.toLowerCase()) return s;
     if(wallet && t.Kantong!==wallet) return s;
     return t.Tipe==='in'?s+(+t.Nominal):s-(+t.Nominal);
   },0);
@@ -1000,7 +1001,7 @@ function renderStats(){
     return d.getMonth()===m&&d.getFullYear()===y;
   });
   // Filter by current user for in/out stats
-  const myTx=mTx.filter(t=>!t.Username||t.Username.toLowerCase()===userName.toLowerCase());
+  const myTx=mTx.filter(t=>!t.Username||t.Username.toLowerCase()===userLogin.toLowerCase());
   const totalIn=myTx.filter(t=>t.Tipe==='in').reduce((s,t)=>s+(+t.Nominal||0),0);
   const totalOut=myTx.filter(t=>t.Tipe!=='in').reduce((s,t)=>s+(+t.Nominal||0),0);
   document.getElementById('stat-in').textContent=formatRp(totalIn);
@@ -1029,7 +1030,7 @@ function buildChart(){
     const d=new Date(); d.setDate(d.getDate()-i);
     days.push(d.toLocaleDateString('id-ID',{day:'numeric',month:'numeric'}));
     const dStr=d.toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric'});
-    const dayTx=allTx.filter(t=>t.Tanggal===dStr&&(!t.Username||t.Username.toLowerCase()===userName.toLowerCase()));
+    const dayTx=allTx.filter(t=>t.Tanggal===dStr&&(!t.Username||t.Username.toLowerCase()===userLogin.toLowerCase()));
     inD.push(dayTx.filter(t=>t.Tipe==='in').reduce((s,t)=>s+(+t.Nominal||0),0));
     outD.push(dayTx.filter(t=>t.Tipe!=='in').reduce((s,t)=>s+(+t.Nominal||0),0));
   }
