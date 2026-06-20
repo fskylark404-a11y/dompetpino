@@ -737,10 +737,25 @@ function calcSaldo(wallet){
     return t.Tipe==='in'?s+(+t.Nominal):s-(+t.Nominal);
   },0);
 }
+function getMyKontribusi(g){
+  if(!g.kontribusi) return 0;
+  try{
+    const k=typeof g.kontribusi==='string'?JSON.parse(g.kontribusi):g.kontribusi;
+    return +k[userLogin]||0;
+  } catch(e){ return 0; }
+}
+function getTotalKontribusi(g){
+  if(!g.kontribusi) return +g.terkumpul||0;
+  try{
+    const k=typeof g.kontribusi==='string'?JSON.parse(g.kontribusi):g.kontribusi;
+    return Object.values(k).reduce((s,v)=>s+(+v||0),0);
+  } catch(e){ return +g.terkumpul||0; }
+}
 function calcBebasPakai(){
   const total=calcSaldo();
   const goals=loadGoals().filter(g=>!g.archived);
-  const digembok=goals.reduce((s,g)=>s+(+g.terkumpul||0),0);
+  // Digembok = only MY contributions
+  const digembok=goals.reduce((s,g)=>s+getMyKontribusi(g),0);
   return total-digembok;
 }
 function updateBalanceDisplay(){
@@ -1101,7 +1116,7 @@ let cachedGoals=null;
 function loadGoals(){ return cachedGoals||[]; }
 
 function calcDigembok(){
-  return loadGoals().filter(g=>!g.archived).reduce((s,g)=>s+(+g.terkumpul||0),0);
+  return loadGoals().filter(g=>!g.archived).reduce((s,g)=>s+getMyKontribusi(g),0);
 }
 
 async function fetchGoals(){
@@ -1142,16 +1157,18 @@ function renderGoals(){
 }
 
 function goalCardHTML(g){
-  const pct=g.target>0?Math.min(100,Math.round((g.terkumpul/g.target)*100)):0;
+  const totalTerkumpul=getTotalKontribusi(g);
+  const myTerkumpul=getMyKontribusi(g);
+  const pct=g.target>0?Math.min(100,Math.round((totalTerkumpul/g.target)*100)):0;
   const done=pct>=100;
   const safeName=g.nama.replace(/'/g,"\\'").replace(/"/g,'&quot;');
-  const updatedInfo=g.updatedBy?`<span style="color:#bbb;font-size:10px;"> · ${g.updatedBy}</span>`:'';
+  const myLabel=myTerkumpul>0?` <span style="color:#5D7599;font-size:10px;">(kamu: ${formatRp(myTerkumpul)})</span>`:'';
   return `<div class="goal-card-wrap">
     <div class="goal-card${g.archived?' archived':''}" onclick="toggleGoalPopup(event,'${g.id}')">
       <div class="goal-card-top">
         <div>
           <div class="goal-card-name"><span class="goal-card-emoji">${g.emoji||'🎯'}</span>${g.nama}</div>
-          <div class="goal-card-meta">Target: ${formatRp(g.target)}${updatedInfo}</div>
+          <div class="goal-card-meta">Target: ${formatRp(g.target)}</div>
           ${g.archived?'<span class="goal-archived-badge">Diarsipkan</span>':''}
         </div>
         <div class="goal-card-actions">
@@ -1161,7 +1178,7 @@ function goalCardHTML(g){
         </div>
       </div>
       <div class="goal-progress-row">
-        <span class="goal-terkumpul">Terkumpul: ${formatRp(g.terkumpul||0)}</span>
+        <span class="goal-terkumpul">Terkumpul: ${formatRp(totalTerkumpul)}${myLabel}</span>
         <span class="goal-pct">${pct}%</span>
       </div>
       <div class="goal-bar-wrap"><div class="goal-bar-fill${done?' done':''}" style="width:${pct}%"></div></div>
@@ -1206,13 +1223,15 @@ async function saveGoal(){
   const btn=document.getElementById('goal-submit-btn');
   btn.disabled=true; btn.textContent='Menyimpan...';
   if(editingGoalId){
-    const goalData={id:editingGoalId,nama,emoji,target,terkumpul};
+    // Only update meta, preserve kontribusi
+    const goalData={id:editingGoalId,nama,emoji,target};
     if(cachedGoals){ const idx=cachedGoals.findIndex(g=>g.id===editingGoalId); if(idx>-1) cachedGoals[idx]={...cachedGoals[idx],...goalData,updatedBy:userName}; }
     await saveGoalToSheet(goalData,'editGoal');
     toast('Kantong diperbarui ✓');
   } else {
     const id=Date.now().toString();
-    const goalData={id,nama,emoji,target,terkumpul,archived:false};
+    const initKontribusi=terkumpul>0?JSON.stringify({[userLogin]:terkumpul}):'{}';
+    const goalData={id,nama,emoji,target,terkumpul:0,kontribusi:initKontribusi,archived:false};
     if(cachedGoals) cachedGoals.push({...goalData,updatedBy:userName}); else cachedGoals=[{...goalData,updatedBy:userName}];
     await saveGoalToSheet(goalData,'addGoal');
     toast('Kantong baru ditambahkan ✓');
@@ -1275,9 +1294,10 @@ function openGoalTx(id,type){
   closeAllGoalPopups();
   const goals=loadGoals();
   const g=goals.find(x=>x.id===id); if(!g) return;
-  pendingGoalTx={id,type,nama:g.nama,emoji:g.emoji||'🎯',currentTerkumpul:+(g.terkumpul||0)};
+  const myAmt=getMyKontribusi(g);
+  pendingGoalTx={id,type,nama:g.nama,emoji:g.emoji||'🎯',currentTerkumpul:myAmt,kontribusi:g.kontribusi||{}};
   document.getElementById('gc-title').textContent=type==='add'?'💰 Tambah Tabungan':'💸 Tarik Dulu';
-  document.getElementById('gc-meta').textContent=`${g.emoji||'🎯'} ${g.nama} · Terkumpul: ${formatRp(g.terkumpul||0)}`;
+  document.getElementById('gc-meta').textContent=`${g.emoji||'🎯'} ${g.nama} · Kontribusimu: ${formatRp(myAmt)}`;
   document.getElementById('gc-amount-label').textContent=type==='add'?'Jumlah ditambahkan':'Jumlah ditarik';
   const amtEl=document.getElementById('gc-amount-val');
   amtEl.textContent='Rp0'; amtEl.className='goal-confirm-amount-val '+type;
@@ -1307,9 +1327,13 @@ async function confirmGoalTransaction(){
   const amount=parseInt(raw)||0;
   if(amount<=0){ toast('Masukkan nominal terlebih dahulu'); return; }
   const cur=pendingGoalTx.currentTerkumpul;
-  const newTerkumpul=pendingGoalTx.type==='add'?cur+amount:Math.max(0,cur-amount);
-  if(cachedGoals){ const idx=cachedGoals.findIndex(g=>g.id===pendingGoalTx.id); if(idx>-1) cachedGoals[idx].terkumpul=newTerkumpul; }
-  await saveGoalToSheet({id:pendingGoalTx.id,terkumpul:newTerkumpul},'editGoal');
+  const newMyAmt=pendingGoalTx.type==='add'?cur+amount:Math.max(0,cur-amount);
+  // Build updated kontribusi object
+  const k=pendingGoalTx.kontribusi&&typeof pendingGoalTx.kontribusi==='string'?JSON.parse(pendingGoalTx.kontribusi):(pendingGoalTx.kontribusi||{});
+  k[userLogin]=newMyAmt;
+  const newKontribusi=JSON.stringify(k);
+  if(cachedGoals){ const idx=cachedGoals.findIndex(g=>g.id===pendingGoalTx.id); if(idx>-1) cachedGoals[idx].kontribusi=newKontribusi; }
+  await saveGoalToSheet({id:pendingGoalTx.id,kontribusi:newKontribusi},'editGoal');
   renderGoals(); updateBalanceDisplay();
   toast(pendingGoalTx.type==='add'?'Tabungan bertambah ✓':'Dana berhasil ditarik ✓');
   closeGoalConfirm();
