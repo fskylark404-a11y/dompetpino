@@ -1368,10 +1368,11 @@ document.getElementById('g-collected').addEventListener('input',function(){ cons
 document.getElementById('modal-goal').addEventListener('click',e=>{ if(e.target===document.getElementById('modal-goal')) closeGoalModal(); });
 document.getElementById('modal-goal-delete').addEventListener('click',e=>{ if(e.target===document.getElementById('modal-goal-delete')) closeGoalDelete(); });
 document.getElementById('pin-modal').addEventListener('click',e=>{ if(e.target===document.getElementById('pin-modal')) closePinModal(); });
-document.getElementById('goal-confirm-overlay').addEventListener('click',e=>{ if(e.target===document.getElementById('goal-confirm-overlay')) closeGoalConfirm(); });
+document.getElementById('goal-confirm-overlay').addEventListener('click',e=>{ if(e.target===document.getElementById('goal-confirm-overlay') && !_goalTxPending) closeGoalConfirm(); });
 
 /* ── GOAL MINI POPUP ── */
 let activePopupId=null;
+let _goalTxPending=false; // prevent document click from closing confirm sheet
 function toggleGoalPopup(e,id){
   e.stopPropagation();
   const popup=document.getElementById('popup-'+String(id)); if(!popup) return;
@@ -1380,14 +1381,17 @@ function toggleGoalPopup(e,id){
   if(!isOpen){ popup.classList.add('open'); activePopupId=id; }
 }
 function closeAllGoalPopups(){ document.querySelectorAll('.goal-mini-popup').forEach(p=>p.classList.remove('open')); activePopupId=null; }
-document.addEventListener('click',()=>closeAllGoalPopups());
+document.addEventListener('click',()=>{ if(!_goalTxPending) closeAllGoalPopups(); });
 
 /* ── GOAL TRANSACTION ── */
 let pendingGoalTx=null;
 function openGoalTx(id,type){
+  _goalTxPending=true;
   closeAllGoalPopups();
-  // Delay to ensure popup is fully closed before opening sheet
-  setTimeout(()=>_openGoalTx(id,type), 80);
+  setTimeout(()=>{
+    _openGoalTx(id,type);
+    setTimeout(()=>{ _goalTxPending=false; },300);
+  }, 50);
 }
 function _openGoalTx(id,type){
   const goals=loadGoals();
