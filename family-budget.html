@@ -968,6 +968,8 @@ async function saveTransaction(){
   const tanggal=now.toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric'});
   const txId=editingTxId||('tx_'+Date.now());
   const payload={ tanggal,username:userLogin,tipe:currentType,kategori:selectedCat,subkategori:selectedSubCat||'',keterangan,nominal:amount,kantong:selectedWallet,id:txId,action:editingTxId?'edit':'add' };
+  // DEBUG: show what's being sent
+  toast(`Saving: ${userLogin} | ${amount} | ${selectedCat}`, 4000);
   try{
     if(isTransfer){
       const idOut='tx_'+Date.now()+'_out';
@@ -980,6 +982,20 @@ async function saveTransaction(){
       allTx.unshift({id:idOut,Tanggal:tanggal,Username:userLogin,Tipe:'out',Kategori:'Transfer Dompet',Keterangan:keterangan,Nominal:amount,Kantong:transferFrom});
       toast('✅ Transfer berhasil!');
     } else {
+      // Test connection first with a simple GET
+      let connOk = false;
+      try{
+        const testRes = await fetch(SHEET_URL+'?t='+Date.now());
+        const testJson = await testRes.json();
+        connOk = testJson.status==='ok';
+      } catch(e){ connOk = false; }
+      
+      if(!connOk){ 
+        toast('⚠️ Tidak bisa konek ke server. Cek koneksi atau coba lagi.'); 
+        btn.disabled=false; btn.innerHTML='Lanjut →';
+        return; 
+      }
+      
       await fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
       if(editingTxId){
         const idx=allTx.findIndex(t=>t.id===editingTxId);
