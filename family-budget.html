@@ -618,12 +618,13 @@ const CATS_OUT = [
 const CAT_COLORS = ['#ba7517','#5D7599','#2e7d52','#C2C4B6','#ABB6C8','#888'];
 
 let isBlurred=true, currentType='in', rawAmount='', userName='', userLogin='', allTx=[], chartObj=null;
-// All username variants that belong to current user (handles Sheet inconsistencies)
+// Match all username variants for current user
 function isMyTx(t){
   if(!t.Username) return true;
-  const u=t.Username.toLowerCase().replace(/\s/g,'');
-  // Match if starts with display name or matches login key
-  return u===userLogin.toLowerCase() || u===userName.toLowerCase() || u.startsWith(userName.toLowerCase());
+  const u=t.Username.toString().toLowerCase().replace(/\s/g,'');
+  const login=userLogin.toLowerCase();       // e.g. "cipcip25"
+  const display=userName.toLowerCase();      // e.g. "cipcip"
+  return u===login || u===display || u.startsWith(display);
 }
 let selectedCat='', selectedSubCat='', selectedWallet='Operasional';
 let editingTxId=null, deletingTxId=null;
@@ -875,6 +876,9 @@ function selectTransfer(from,to){
 
 /* ── CONFIRM ── */
 function showConfirm(){
+  // Re-read from input in case rawAmount state is stale
+  const rawVal=document.getElementById('m-amount').value.replace(/\./g,'').replace(/[^0-9]/g,'');
+  if(rawVal) rawAmount=rawVal;
   const amount=parseFloat(rawAmount);
   if(!amount||amount<=0){ toast('Masukkan nominal yang valid.'); return; }
   if(!selectedCat){ toast('Pilih kategori dulu.'); return; }
