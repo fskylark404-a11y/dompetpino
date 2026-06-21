@@ -6,9 +6,6 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Dompet Pino" />
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-<meta http-equiv="Pragma" content="no-cache" />
-<meta http-equiv="Expires" content="0" />
 <title>Dompet Pino</title>
 <link rel="apple-touch-icon" sizes="180x180" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAAEgElEQVR4nO3dTVYbORiGUcHpbYZhs4KwiGYFybBZaHrQx0kIxq4fufTp9b3jHLtSevIhi4I8tMG+fP32Y/Q10M/b6/PDyPc//M0FfF+ODvyQNxMxrR0T903fQMicc8uwb/LCQmaJW4Td9QWFzBY9w+7yQkKmhx5hP+59ATHTS4+WdgUtZnrb29SmES9kjrBlC7J6QouZo2xpbVXQYuZoa5tbHLSYGWVNe4uCFjOjLW1w97EdVHI1aNOZKpa0eDFoMVPNtSY/DVrMVHWpTXtoopwN2nSmus8aNaGJ8iFo05lZnGvVhCbKu6BNZ2bzZ7MmNFF+Bm06M6vf2zWhiSJoojy2ZrvB/E4Nm9BEETRRBE2UB/tnkpjQRBE0UQRNFEETRdBEETRRBE0UQRNF0EQRNFEETRRBE0XQRBE0UQRNlJJB++HZOVRcp5JBt1bzZvFL1fUp+bvtTqreNOoqO6FhC0ETRdBEETRRBE0UQROl5LFdxd/Iw3nVjlZLBs111UKqQtCTEfJl9tATEfN1gp6EmJcR9ATEvJygieJDYXGXpnOF481qXz1M6ElViLm1OtdxYkLfmeoTfy9B34klW4PTn5k5bFuOO7B2n1ttX7yGoMNtjXPWqAUdbG+UM0YtaKIIOlSv6TrblBY0UQRNFEETRdBEEXSoXt/tm+27hoImiqCD7Z2us03n1gQdb2uUM8bcmqDvwto4Z425NY+P3o1TpJ6HJkpCtJfYckyqyjMWVa7jxIQu7unl+6fRVIupAhOaKIKeQPq+tydBT0LUywh6IqK+TtCTeXr5LuwLnHJMqkrU1U5aTGiiCJoogiaKoIkiaKIImiiCJoqgiSJoogiaKIImiqCJImiiCJooj2+vzw+jLwJ6eHt9fjChiSJoogiaKI+t/b/3GH0hsMepYROaKIIOlSv6TrblBY0UQRNFEETRdBEEXSoXt/tm+27hoImiqCD7Z2us03n1gQdb2uUM8bcmqDvwto4Z425NY+P3o1TpJ6HJkpCtJfYckyqyjMWVa7jxIQu7unl+6fRVIupAhOaKIKeQPq+tydBT0LUywh6IqK+TtCTeXr5LuwLnHJMqkrU1U5aTGiiCJoogiaKoIkiaKIImiiCJoqgiSJoogiaKIImiqCJImiiCJooj2+vzw+jLwJ6eHt9fjChiSJoogiaKI+t/b/3GH0hsMepYROaKIImii" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
@@ -614,10 +611,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 </div>
 
 <script>
-// Force clear any cached version
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.getRegistrations().then(regs=>regs.forEach(r=>r.unregister()));
-}
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbyx0D0ZRZBfcV9_i-TQ1QZMHvH3AlUZegf4lmFqRANqaPFnLzWIB7ODi6MswW0fDSbdHA/exec";
 const USERS = ["pino18", "cipcip25"];
 const USER_DISPLAY = { "pino18":"Pino", "cipcip25":"Cipcip" };
@@ -986,7 +979,13 @@ async function saveTransaction(){
       allTx.unshift({id:idOut,Tanggal:tanggal,Username:userLogin,Tipe:'out',Kategori:'Transfer Dompet',Keterangan:keterangan,Nominal:amount,Kantong:transferFrom});
       toast('✅ Transfer berhasil!');
     } else {
-      await fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      try{
+        await fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      } catch(fetchErr){
+        toast('⚠️ Gagal kirim ke server: '+fetchErr.message);
+        btn.disabled=false; btn.innerHTML='Lanjut →';
+        return;
+      }
       if(editingTxId){
         const idx=allTx.findIndex(t=>t.id===editingTxId);
         if(idx>-1) allTx[idx]={...allTx[idx],...{Tanggal:tanggal,Username:userLogin,Tipe:currentType,Kategori:selectedCat,SubKategori:selectedSubCat||'',Keterangan:keterangan,Nominal:amount,Kantong:selectedWallet}};
