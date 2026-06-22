@@ -991,19 +991,23 @@ async function saveTransaction(){
       const idIn='tx_'+(Date.now()+1)+'_in';
       await fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({tanggal,username:userLogin,tipe:'out',kategori:'Transfer Dompet',subkategori:'',keterangan,nominal:amount,kantong:transferFrom,id:idOut,action:'add'})});
       await fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({tanggal,username:userLogin,tipe:'in',kategori:'Transfer Dompet',subkategori:'',keterangan,nominal:amount,kantong:transferTo,id:idIn,action:'add'})});
-      allTx.unshift({id:idIn,Tanggal:tanggal,Username:userLogin,Tipe:'in',Kategori:'Transfer Dompet',Keterangan:keterangan,Nominal:amount,Kantong:transferTo});
-      allTx.unshift({id:idOut,Tanggal:tanggal,Username:userLogin,Tipe:'out',Kategori:'Transfer Dompet',Keterangan:keterangan,Nominal:amount,Kantong:transferFrom});
+      btn.innerHTML='<span class="spinner"></span>Memverifikasi...';
+      const v=await verifyAfterSave(list=>list.some(t=>t.id===idOut)&&list.some(t=>t.id===idIn));
+      if(!v.ok){ toast('⚠️ Transfer belum tersimpan. Cek koneksi & coba lagi.'); return; }
+      allTx=v.data;
       toast('✅ Transfer berhasil!');
     } else {
       await fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-      if(editingTxId){
-        const idx=allTx.findIndex(t=>t.id===editingTxId);
-        if(idx>-1) allTx[idx]={...allTx[idx],Tanggal:tanggal,Username:userLogin,Tipe:currentType,Kategori:selectedCat,SubKategori:selectedSubCat||'',Keterangan:keterangan,Nominal:amount,Kantong:selectedWallet};
-        toast('✅ Transaksi diperbarui!');
-      } else {
-        allTx.unshift({id:txId,Tanggal:tanggal,Username:userLogin,Tipe:currentType,Kategori:selectedCat,SubKategori:selectedSubCat||'',Keterangan:keterangan,Nominal:amount,Kantong:selectedWallet});
-        toast('✅ Transaksi tersimpan!');
-      }
+      btn.innerHTML='<span class="spinner"></span>Memverifikasi...';
+      const v=await verifyAfterSave(list=>{
+        const found=list.find(t=>t.id===txId);
+        if(!found) return false;
+        // pastikan nominal yang tersimpan memang sesuai (deteksi kalau kolom geser lagi)
+        return Number(found.Nominal)===amount;
+      });
+      if(!v.ok){ toast('⚠️ Transaksi belum tersimpan dengan benar. Cek koneksi & coba lagi.'); return; }
+      allTx=v.data;
+      toast(editingTxId?'✅ Transaksi diperbarui!':'✅ Transaksi tersimpan!');
     }
     updateBalanceDisplay(); closeModal();
   } catch(err){ toast('⚠️ Gagal menyimpan. Cek koneksi.'); }
@@ -1022,23 +1026,51 @@ function closeDelete(){ document.getElementById('modal-delete').classList.remove
 document.getElementById('modal-delete').addEventListener('click',e=>{ if(e.target===document.getElementById('modal-delete')) closeDelete(); });
 async function confirmDelete(){
   if(!deletingTxId) return;
+  const id=deletingTxId;
+  closeDelete();
+  toast('Menghapus...',60000);
   try{
-    await fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'delete',id:deletingTxId})});
-    allTx=allTx.filter(t=>t.id!==deletingTxId);
-    updateBalanceDisplay(); toast('🗑️ Transaksi dihapus.'); closeDelete(); renderHistory();
+    await fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'delete',id})});
+    const v=await verifyAfterSave(list=>!list.some(t=>t.id===id));
+    if(!v.ok){ toast('⚠️ Belum berhasil dihapus. Cek koneksi & coba lagi.'); return; }
+    allTx=v.data;
+    updateBalanceDisplay(); toast('🗑️ Transaksi dihapus.'); renderHistory();
   } catch(e){ toast('⚠️ Gagal menghapus.'); }
 }
 
 /* ── LOAD TX ── */
+async function fetchTxFromSheet(){
+  const res=await fetch(SHEET_URL+'?t='+Date.now());
+  const json=await res.json();
+  if(json.status==='ok'){
+    return json.data.reverse().map((t,i)=>({...t,id:t.id||'tx_legacy_'+i}));
+  }
+  throw new Error('bad status');
+}
 async function loadTx(){
   try{
-    const res=await fetch(SHEET_URL+'?t='+Date.now());
-    const json=await res.json();
-    if(json.status==='ok'){
-      allTx=json.data.reverse().map((t,i)=>({...t,id:t.id||'tx_legacy_'+i}));
-      updateBalanceDisplay();
-    }
+    allTx=await fetchTxFromSheet();
+    updateBalanceDisplay();
   } catch(e){}
+}
+
+/* ── VERIFIKASI SETELAH SIMPAN ──
+   Karena fetch ke Apps Script pakai mode:'no-cors', kita tidak bisa
+   baca response-nya langsung untuk tahu sukses/gagal. Jadi setelah
+   kirim, kita fetch ulang data sheet beberapa kali (dengan jeda) dan
+   cek apakah transaksi dengan id yang diharapkan benar2 ada/hilang
+   di data terbaru. Ini memastikan UI selalu cermin dari data sheet
+   yang sebenarnya, bukan asumsi.
+   checkFn(list) harus return true jika kondisi yang diharapkan terpenuhi. */
+async function verifyAfterSave(checkFn,{retries=4,delayMs=900}={}){
+  for(let i=0;i<retries;i++){
+    await new Promise(r=>setTimeout(r,delayMs));
+    try{
+      const list=await fetchTxFromSheet();
+      if(checkFn(list)) return {ok:true,data:list};
+    } catch(e){ /* coba lagi */ }
+  }
+  return {ok:false,data:null};
 }
 
 /* ── HISTORY ── */
@@ -1144,17 +1176,33 @@ function goSlide(n){
 })();
 
 /* ── GOALS (Google Sheet) ── */
+async function fetchGoalsFromSheet(){
+  const [gr,hr]=await Promise.all([
+    fetch(SHEET_URL+'?action=getGoals&t='+Date.now()),
+    fetch(SHEET_URL+'?action=getGoalHistory&t='+Date.now())
+  ]);
+  const gj=await gr.json(), hj=await hr.json();
+  if(gj.status!=='ok') throw new Error('bad goals status');
+  return {goals:gj.goals, history:(hj.status==='ok'?(hj.history||[]):[])};
+}
 async function fetchGoals(){
   try{
-    const [gr,hr]=await Promise.all([
-      fetch(SHEET_URL+'?action=getGoals&t='+Date.now()),
-      fetch(SHEET_URL+'?action=getGoalHistory&t='+Date.now())
-    ]);
-    const gj=await gr.json(), hj=await hr.json();
-    if(gj.status==='ok') cachedGoals=gj.goals;
-    if(hj.status==='ok') cachedGoalHistory=hj.history||[];
+    const {goals,history}=await fetchGoalsFromSheet();
+    cachedGoals=goals; cachedGoalHistory=history;
     renderGoals(); updateBalanceDisplay();
   } catch(e){}
+}
+/* Sama seperti verifyAfterSave tapi untuk data Goals.
+   checkFn({goals,history}) => boolean */
+async function verifyAfterGoalSave(checkFn,{retries=4,delayMs=900}={}){
+  for(let i=0;i<retries;i++){
+    await new Promise(r=>setTimeout(r,delayMs));
+    try{
+      const result=await fetchGoalsFromSheet();
+      if(checkFn(result)) return {ok:true,...result};
+    } catch(e){ /* coba lagi */ }
+  }
+  return {ok:false};
 }
 async function saveGoalToSheet(data,action){
   try{
@@ -1291,21 +1339,31 @@ async function confirmGoalTransaction(){
   const k=pendingGoalTx.kontribusi&&typeof pendingGoalTx.kontribusi==='string'?JSON.parse(pendingGoalTx.kontribusi):(typeof pendingGoalTx.kontribusi==='object'?{...pendingGoalTx.kontribusi}:{});
   k[userLogin]=newMine;
   const newKontribusi=JSON.stringify(k);
-  // Update cache
-  if(cachedGoals){ const idx=cachedGoals.findIndex(g=>String(g.id)===String(pendingGoalTx.id)); if(idx>-1) cachedGoals[idx].kontribusi=newKontribusi; }
-  // Save to Sheet
+  const goalId=pendingGoalTx.id, txType=pendingGoalTx.type;
   const now=new Date();
   const tgl=now.toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric'});
-  const histRec={id:'gh_'+Date.now(),goalId:pendingGoalTx.id,goalNama:pendingGoalTx.nama,username:userLogin,tipe:pendingGoalTx.type,nominal:amount,tanggal:tgl};
-  cachedGoalHistory.unshift(histRec);
+  const histId='gh_'+Date.now();
+  const histRec={id:histId,goalId,goalNama:pendingGoalTx.nama,username:userLogin,tipe:txType,nominal:amount,tanggal:tgl};
+  const ok=document.getElementById('gc-ok-btn');
+  ok.disabled=true; ok.textContent='Menyimpan...';
   await Promise.all([
-    saveGoalToSheet({id:pendingGoalTx.id,kontribusi:newKontribusi},'editGoal'),
+    saveGoalToSheet({id:goalId,kontribusi:newKontribusi},'editGoal'),
     saveGoalToSheet(histRec,'addGoalHistory')
   ]);
+  ok.textContent='Memverifikasi...';
+  const v=await verifyAfterGoalSave(({goals,history})=>{
+    const g=goals.find(x=>String(x.id)===String(goalId));
+    if(!g) return false;
+    const savedMine=+( (g.kontribusi||{})[userLogin] || 0 );
+    const histFound=history.some(h=>String(h.id)===String(histId));
+    return savedMine===newMine && histFound;
+  });
+  ok.disabled=false; ok.textContent=txType==='add'?'Simpan Tabungan':'Tarik Dana';
+  if(!v.ok){ toast('⚠️ Belum tersimpan dengan benar. Cek koneksi & coba lagi.'); return; }
+  cachedGoals=v.goals; cachedGoalHistory=v.history;
   renderGoals(); updateBalanceDisplay();
-  toast(pendingGoalTx.type==='add'?'Tabungan bertambah ✓':'Dana berhasil ditarik ✓');
+  toast(txType==='add'?'Tabungan bertambah ✓':'Dana berhasil ditarik ✓');
   closeGoalConfirm();
-  setTimeout(fetchGoals,2000);
 }
 
 /* ── GOAL MODAL ── */
@@ -1332,21 +1390,27 @@ async function saveGoal(){
   const emoji=sel?sel.textContent:'🎯';
   const btn=document.getElementById('goal-submit-btn');
   btn.disabled=true; btn.textContent='Menyimpan...';
+  let v;
   if(editingGoalId){
     const goalData={id:editingGoalId,nama,emoji,target};
-    if(cachedGoals){ const idx=cachedGoals.findIndex(g=>String(g.id)===String(editingGoalId)); if(idx>-1) cachedGoals[idx]={...cachedGoals[idx],...goalData}; }
     await saveGoalToSheet(goalData,'editGoal');
-    toast('Kantong diperbarui ✓');
+    btn.textContent='Memverifikasi...';
+    v=await verifyAfterGoalSave(({goals})=>{
+      const g=goals.find(x=>String(x.id)===String(editingGoalId));
+      return !!g && g.nama===nama && +g.target===target && g.emoji===emoji;
+    });
   } else {
     const id=Date.now().toString();
     const goalData={id,nama,emoji,target,terkumpul:0,kontribusi:'{}',archived:false};
-    if(cachedGoals) cachedGoals.push(goalData); else cachedGoals=[goalData];
     await saveGoalToSheet(goalData,'addGoal');
-    toast('Kantong baru ditambahkan ✓');
+    btn.textContent='Memverifikasi...';
+    v=await verifyAfterGoalSave(({goals})=>goals.some(g=>String(g.id)===String(id)));
   }
   btn.disabled=false; btn.textContent='Simpan Kantong';
+  if(!v.ok){ toast('⚠️ Belum tersimpan dengan benar. Cek koneksi & coba lagi.'); return; }
+  cachedGoals=v.goals; cachedGoalHistory=v.history;
+  toast(editingGoalId?'Kantong diperbarui ✓':'Kantong baru ditambahkan ✓');
   closeGoalModal(); renderGoals(); updateBalanceDisplay();
-  setTimeout(fetchGoals,2000);
 }
 
 document.getElementById('g-target').addEventListener('input',function(){ const r=this.value.replace(/\D/g,''); this.value=r?parseInt(r).toLocaleString('id-ID'):''; });
@@ -1357,11 +1421,16 @@ async function toggleArchiveGoal(gid){
   const goals=loadGoals();
   const g=goals.find(x=>String(x.id)===String(gid)); if(!g) return;
   const newArchived=!g.archived;
-  if(cachedGoals){ const idx=cachedGoals.findIndex(x=>String(x.id)===String(gid)); if(idx>-1) cachedGoals[idx].archived=newArchived; }
+  toast(newArchived?'Mengarsipkan...':'Memindahkan...',60000);
   await saveGoalToSheet({id:gid,archived:newArchived},'editGoal');
+  const v=await verifyAfterGoalSave(({goals})=>{
+    const found=goals.find(x=>String(x.id)===String(gid));
+    return !!found && !!found.archived===newArchived;
+  });
+  if(!v.ok){ toast('⚠️ Belum tersimpan dengan benar. Cek koneksi & coba lagi.'); return; }
+  cachedGoals=v.goals; cachedGoalHistory=v.history;
   renderGoals(); updateBalanceDisplay();
   toast(newArchived?'Diarsipkan':'Dipindah ke aktif');
-  setTimeout(fetchGoals,2000);
 }
 
 function openGoalDelete(gid,nama){
@@ -1373,11 +1442,15 @@ function closeGoalDelete(){ document.getElementById('modal-goal-delete').classLi
 document.getElementById('modal-goal-delete').addEventListener('click',e=>{ if(e.target===document.getElementById('modal-goal-delete')) closeGoalDelete(); });
 async function confirmGoalDelete(){
   if(!deleteGoalId) return;
-  if(cachedGoals) cachedGoals=cachedGoals.filter(g=>String(g.id)!==String(deleteGoalId));
-  await saveGoalToSheet({id:deleteGoalId},'deleteGoal');
-  closeGoalDelete(); renderGoals(); updateBalanceDisplay();
+  const gid=deleteGoalId;
+  closeGoalDelete();
+  toast('Menghapus...',60000);
+  await saveGoalToSheet({id:gid},'deleteGoal');
+  const v=await verifyAfterGoalSave(({goals})=>!goals.some(g=>String(g.id)===String(gid)));
+  if(!v.ok){ toast('⚠️ Belum berhasil dihapus. Cek koneksi & coba lagi.'); return; }
+  cachedGoals=v.goals; cachedGoalHistory=v.history;
+  renderGoals(); updateBalanceDisplay();
   toast('Kantong dihapus');
-  setTimeout(fetchGoals,2000);
 }
 
 document.getElementById('pin-modal').addEventListener('click',e=>{ if(e.target===document.getElementById('pin-modal')) closePinModal(); });
