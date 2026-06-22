@@ -989,15 +989,15 @@ async function saveTransaction(){
     if(isTransfer){
       const idOut='tx_'+Date.now()+'_out';
       const idIn='tx_'+(Date.now()+1)+'_in';
-      await fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({tanggal,username:userLogin,tipe:'out',kategori:'Transfer Dompet',subkategori:'',keterangan,nominal:amount,kantong:transferFrom,id:idOut,action:'add'})});
-      await fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({tanggal,username:userLogin,tipe:'in',kategori:'Transfer Dompet',subkategori:'',keterangan,nominal:amount,kantong:transferTo,id:idIn,action:'add'})});
+      await fetchWithTimeout(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({tanggal,username:userLogin,tipe:'out',kategori:'Transfer Dompet',subkategori:'',keterangan,nominal:amount,kantong:transferFrom,id:idOut,action:'add'})});
+      await fetchWithTimeout(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({tanggal,username:userLogin,tipe:'in',kategori:'Transfer Dompet',subkategori:'',keterangan,nominal:amount,kantong:transferTo,id:idIn,action:'add'})});
       btn.innerHTML='<span class="spinner"></span>Memverifikasi...';
       const v=await verifyAfterSave(list=>list.some(t=>t.id===idOut)&&list.some(t=>t.id===idIn));
       if(!v.ok){ toast('⚠️ Transfer belum tersimpan. Cek koneksi & coba lagi.'); return; }
       allTx=v.data;
       toast('✅ Transfer berhasil!');
     } else {
-      await fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      await fetchWithTimeout(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
       btn.innerHTML='<span class="spinner"></span>Memverifikasi...';
       const v=await verifyAfterSave(list=>{
         const found=list.find(t=>t.id===txId);
@@ -1030,7 +1030,7 @@ async function confirmDelete(){
   closeDelete();
   toast('Menghapus...',60000);
   try{
-    await fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'delete',id})});
+    await fetchWithTimeout(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'delete',id})});
     const v=await verifyAfterSave(list=>!list.some(t=>t.id===id));
     if(!v.ok){ toast('⚠️ Belum berhasil dihapus. Cek koneksi & coba lagi.'); return; }
     allTx=v.data;
@@ -1040,7 +1040,7 @@ async function confirmDelete(){
 
 /* ── LOAD TX ── */
 async function fetchTxFromSheet(){
-  const res=await fetch(SHEET_URL+'?t='+Date.now());
+  const res=await fetchWithTimeout(SHEET_URL+'?t='+Date.now());
   const json=await res.json();
   if(json.status==='ok'){
     return json.data.reverse().map((t,i)=>({...t,id:t.id||'tx_legacy_'+i}));
@@ -1062,7 +1062,7 @@ async function loadTx(){
    di data terbaru. Ini memastikan UI selalu cermin dari data sheet
    yang sebenarnya, bukan asumsi.
    checkFn(list) harus return true jika kondisi yang diharapkan terpenuhi. */
-async function verifyAfterSave(checkFn,{retries=4,delayMs=900}={}){
+async function verifyAfterSave(checkFn,{retries=3,delayMs=1500}={}){
   for(let i=0;i<retries;i++){
     await new Promise(r=>setTimeout(r,delayMs));
     try{
@@ -1175,15 +1175,35 @@ function goSlide(n){
   },{passive:true});
 })();
 
+/* fetch dengan timeout eksplisit. Di iOS standalone PWA, request fetch
+   ke domain pihak ketiga kadang "menggantung" (promise tidak pernah
+   resolve/reject) bukan cuma lambat - terutama kalau banyak request
+   beruntun ke domain yang sama dalam waktu singkat. Tanpa timeout,
+   await fetch(...) bisa diam selamanya dan verifikasi tidak akan
+   pernah dianggap gagal ataupun berhasil. */
+function fetchWithTimeout(url,opts={},ms=6000){
+  return Promise.race([
+    fetch(url,opts),
+    new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))
+  ]);
+}
+
 /* ── GOALS (Google Sheet) ── */
 async function fetchGoalsFromSheet(){
-  const [gr,hr]=await Promise.all([
-    fetch(SHEET_URL+'?action=getGoals&t='+Date.now()),
-    fetch(SHEET_URL+'?action=getGoalHistory&t='+Date.now())
-  ]);
-  const gj=await gr.json(), hj=await hr.json();
+  // Sequential, bukan Promise.all - iOS standalone PWA membatasi
+  // koneksi paralel per-domain lebih ketat dibanding browser tab
+  // biasa, jadi 2 fetch bersamaan ke domain sama bisa saling
+  // memperlambat/menggantung satu sama lain.
+  const gr=await fetchWithTimeout(SHEET_URL+'?action=getGoals&t='+Date.now());
+  const gj=await gr.json();
   if(gj.status!=='ok') throw new Error('bad goals status');
-  return {goals:gj.goals, history:(hj.status==='ok'?(hj.history||[]):[])};
+  let history=[];
+  try{
+    const hr=await fetchWithTimeout(SHEET_URL+'?action=getGoalHistory&t='+Date.now());
+    const hj=await hr.json();
+    if(hj.status==='ok') history=hj.history||[];
+  } catch(e){ /* history gagal tidak boleh menggagalkan goals */ }
+  return {goals:gj.goals, history};
 }
 async function fetchGoals(){
   try{
@@ -1193,8 +1213,11 @@ async function fetchGoals(){
   } catch(e){}
 }
 /* Sama seperti verifyAfterSave tapi untuk data Goals.
-   checkFn({goals,history}) => boolean */
-async function verifyAfterGoalSave(checkFn,{retries=4,delayMs=900}={}){
+   checkFn({goals,history}) => boolean
+   Retry dikurangi & delay diperpanjang supaya tidak membombardir
+   Apps Script dengan request beruntun (yang justru memperparah
+   masalah di iOS PWA). */
+async function verifyAfterGoalSave(checkFn,{retries=3,delayMs=1500}={}){
   for(let i=0;i<retries;i++){
     await new Promise(r=>setTimeout(r,delayMs));
     try{
@@ -1206,8 +1229,8 @@ async function verifyAfterGoalSave(checkFn,{retries=4,delayMs=900}={}){
 }
 async function saveGoalToSheet(data,action){
   try{
-    await fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,...data,updatedBy:userLogin,updatedAt:new Date().toISOString()})});
-  } catch(e){}
+    await fetchWithTimeout(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,...data,updatedBy:userLogin,updatedAt:new Date().toISOString()})},6000);
+  } catch(e){ /* timeout/gagal kirim - verifikasi di pemanggil akan mendeteksi ini */ }
 }
 function loadGoals(){ return cachedGoals||[]; }
 
@@ -1346,10 +1369,10 @@ async function confirmGoalTransaction(){
   const histRec={id:histId,goalId,goalNama:pendingGoalTx.nama,username:userLogin,tipe:txType,nominal:amount,tanggal:tgl};
   const ok=document.getElementById('gc-ok-btn');
   ok.disabled=true; ok.textContent='Menyimpan...';
-  await Promise.all([
-    saveGoalToSheet({id:goalId,kontribusi:newKontribusi},'editGoal'),
-    saveGoalToSheet(histRec,'addGoalHistory')
-  ]);
+  // Sequential (bukan Promise.all) - lihat catatan di fetchGoalsFromSheet
+  // soal koneksi paralel ke domain sama di iOS standalone PWA.
+  await saveGoalToSheet({id:goalId,kontribusi:newKontribusi},'editGoal');
+  await saveGoalToSheet(histRec,'addGoalHistory');
   ok.textContent='Memverifikasi...';
   const v=await verifyAfterGoalSave(({goals,history})=>{
     const g=goals.find(x=>String(x.id)===String(goalId));
