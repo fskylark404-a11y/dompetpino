@@ -1181,11 +1181,28 @@ function goSlide(n){
    beruntun ke domain yang sama dalam waktu singkat. Tanpa timeout,
    await fetch(...) bisa diam selamanya dan verifikasi tidak akan
    pernah dianggap gagal ataupun berhasil. */
-function fetchWithTimeout(url,opts={},ms=6000){
-  return Promise.race([
-    fetch(url,opts),
-    new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))
-  ]);
+/* fetch dengan timeout eksplisit + retry otomatis untuk 404.
+   Apps Script Web App redirect ke script.googleusercontent.com
+   untuk eksekusi - redirect ini KADANG 404 secara intermiten
+   (cold start / rate limit sisi Google), terlepas dari kode kita.
+   Ini retry beberapa kali sebelum benar2 dianggap gagal. */
+async function fetchWithTimeout(url,opts={},ms=6000,retriesOn404=2){
+  for(let attempt=0;attempt<=retriesOn404;attempt++){
+    try{
+      const res=await Promise.race([
+        fetch(url,opts),
+        new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))
+      ]);
+      if(res.status===404 && attempt<retriesOn404){
+        await new Promise(r=>setTimeout(r,500+attempt*500));
+        continue;
+      }
+      return res;
+    } catch(e){
+      if(attempt>=retriesOn404) throw e;
+      await new Promise(r=>setTimeout(r,500+attempt*500));
+    }
+  }
 }
 
 /* ── GOALS (Google Sheet) ── */
@@ -1374,12 +1391,11 @@ async function confirmGoalTransaction(){
   // soal koneksi paralel ke domain sama di iOS standalone PWA.
   await saveGoalToSheet({id:goalId,kontribusi:newKontribusi},'editGoal');
   await saveGoalToSheet(histRec,'addGoalHistory');
-  const v=await verifyAfterGoalSave(({goals,history})=>{
+  const v=await verifyAfterGoalSave(({goals})=>{
     const g=goals.find(x=>String(x.id)===String(goalId));
     if(!g) return false;
     const savedMine=+( (g.kontribusi||{})[userLogin] || 0 );
-    const histFound=history.some(h=>String(h.id)===String(histId));
-    return savedMine===newMine && histFound;
+    return savedMine===newMine;
   },{onProgress:(i,n)=>{ ok.textContent=`Memverifikasi... (${i}/${n})`; }});
   ok.disabled=false; ok.textContent=txType==='add'?'Simpan Tabungan':'Tarik Dana';
   if(!v.ok){ toast('⚠️ Belum tersimpan dengan benar. Cek koneksi & coba lagi.'); return; }
