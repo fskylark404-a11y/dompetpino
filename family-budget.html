@@ -1217,9 +1217,10 @@ async function fetchGoals(){
    Retry dikurangi & delay diperpanjang supaya tidak membombardir
    Apps Script dengan request beruntun (yang justru memperparah
    masalah di iOS PWA). */
-async function verifyAfterGoalSave(checkFn,{retries=3,delayMs=1500}={}){
+async function verifyAfterGoalSave(checkFn,{retries=6,delayMs=1800,onProgress}={}){
   for(let i=0;i<retries;i++){
     await new Promise(r=>setTimeout(r,delayMs));
+    if(onProgress) onProgress(i+1,retries);
     try{
       const result=await fetchGoalsFromSheet();
       if(checkFn(result)) return {ok:true,...result};
@@ -1373,14 +1374,13 @@ async function confirmGoalTransaction(){
   // soal koneksi paralel ke domain sama di iOS standalone PWA.
   await saveGoalToSheet({id:goalId,kontribusi:newKontribusi},'editGoal');
   await saveGoalToSheet(histRec,'addGoalHistory');
-  ok.textContent='Memverifikasi...';
   const v=await verifyAfterGoalSave(({goals,history})=>{
     const g=goals.find(x=>String(x.id)===String(goalId));
     if(!g) return false;
     const savedMine=+( (g.kontribusi||{})[userLogin] || 0 );
     const histFound=history.some(h=>String(h.id)===String(histId));
     return savedMine===newMine && histFound;
-  });
+  },{onProgress:(i,n)=>{ ok.textContent=`Memverifikasi... (${i}/${n})`; }});
   ok.disabled=false; ok.textContent=txType==='add'?'Simpan Tabungan':'Tarik Dana';
   if(!v.ok){ toast('⚠️ Belum tersimpan dengan benar. Cek koneksi & coba lagi.'); return; }
   cachedGoals=v.goals; cachedGoalHistory=v.history;
@@ -1417,17 +1417,15 @@ async function saveGoal(){
   if(editingGoalId){
     const goalData={id:editingGoalId,nama,emoji,target};
     await saveGoalToSheet(goalData,'editGoal');
-    btn.textContent='Memverifikasi...';
     v=await verifyAfterGoalSave(({goals})=>{
       const g=goals.find(x=>String(x.id)===String(editingGoalId));
       return !!g && g.nama===nama && +g.target===target && g.emoji===emoji;
-    });
+    },{onProgress:(i,n)=>{ btn.textContent=`Memverifikasi... (${i}/${n})`; }});
   } else {
     const id=Date.now().toString();
     const goalData={id,nama,emoji,target,terkumpul:0,kontribusi:'{}',archived:false};
     await saveGoalToSheet(goalData,'addGoal');
-    btn.textContent='Memverifikasi...';
-    v=await verifyAfterGoalSave(({goals})=>goals.some(g=>String(g.id)===String(id)));
+    v=await verifyAfterGoalSave(({goals})=>goals.some(g=>String(g.id)===String(id)),{onProgress:(i,n)=>{ btn.textContent=`Memverifikasi... (${i}/${n})`; }});
   }
   btn.disabled=false; btn.textContent='Simpan Kantong';
   if(!v.ok){ toast('⚠️ Belum tersimpan dengan benar. Cek koneksi & coba lagi.'); return; }
@@ -1449,7 +1447,7 @@ async function toggleArchiveGoal(gid){
   const v=await verifyAfterGoalSave(({goals})=>{
     const found=goals.find(x=>String(x.id)===String(gid));
     return !!found && !!found.archived===newArchived;
-  });
+  },{onProgress:(i,n)=>{ toast(`${newArchived?'Mengarsipkan':'Memindahkan'}... (${i}/${n})`,60000); }});
   if(!v.ok){ toast('⚠️ Belum tersimpan dengan benar. Cek koneksi & coba lagi.'); return; }
   cachedGoals=v.goals; cachedGoalHistory=v.history;
   renderGoals(); updateBalanceDisplay();
@@ -1469,7 +1467,7 @@ async function confirmGoalDelete(){
   closeGoalDelete();
   toast('Menghapus...',60000);
   await saveGoalToSheet({id:gid},'deleteGoal');
-  const v=await verifyAfterGoalSave(({goals})=>!goals.some(g=>String(g.id)===String(gid)));
+  const v=await verifyAfterGoalSave(({goals})=>!goals.some(g=>String(g.id)===String(gid)),{onProgress:(i,n)=>{ toast(`Menghapus... (${i}/${n})`,60000); }});
   if(!v.ok){ toast('⚠️ Belum berhasil dihapus. Cek koneksi & coba lagi.'); return; }
   cachedGoals=v.goals; cachedGoalHistory=v.history;
   renderGoals(); updateBalanceDisplay();
