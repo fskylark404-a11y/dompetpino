@@ -999,6 +999,20 @@ function selectSubCat(label){
     b.className='cat-btn';
     if(b.textContent===label) b.classList.add(currentType==='in'?'selected-in':'selected-out');
   });
+  // Kalau subkategori yang dipilih adalah "Lainnya", tampilkan
+  // field keterangan opsional (tidak mengubah behavior kategori
+  // yang sudah punya manual/optionalNote di levelnya sendiri).
+  const manualWrap=document.getElementById('manual-wrap');
+  const catDef=(currentType==='in'?CATS_IN:CATS_OUT).find(c=>c.label===selectedCat);
+  if(!(catDef&&(catDef.manual||catDef.optionalNote))){
+    if(label==='Lainnya'){
+      document.getElementById('m-manual').placeholder='Keterangan (opsional)...';
+      document.getElementById('m-manual').dataset.required='false';
+      manualWrap.style.display='block';
+    } else {
+      manualWrap.style.display='none';
+    }
+  }
 }
 function selectWallet(w){ selectedWallet=w; updateWalletBtns(); }
 function updateWalletBtns(){
