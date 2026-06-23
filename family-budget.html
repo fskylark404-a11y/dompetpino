@@ -1551,13 +1551,16 @@ async function saveGoal(){
     await saveGoalToSheet(goalData,'editGoal');
     v=await verifyAfterGoalSave(({goals})=>{
       const g=goals.find(x=>String(x.id)===String(editingGoalId));
-      return !!g && g.nama===nama && +g.target===target && g.emoji===emoji;
+      return !!g && g.nama===nama && +g.target===target && g.emoji===emoji && +(g.priority||0)===priority;
     },{onProgress:(i,n)=>{ btn.textContent=`Memverifikasi... (${i}/${n})`; }});
   } else {
     const id=Date.now().toString();
     const goalData={id,nama,emoji,target,priority,terkumpul:0,kontribusi:'{}',archived:false};
     await saveGoalToSheet(goalData,'addGoal');
-    v=await verifyAfterGoalSave(({goals})=>goals.some(g=>String(g.id)===String(id)),{onProgress:(i,n)=>{ btn.textContent=`Memverifikasi... (${i}/${n})`; }});
+    v=await verifyAfterGoalSave(({goals})=>{
+      const g=goals.find(x=>String(x.id)===String(id));
+      return !!g && +(g.priority||0)===priority;
+    },{onProgress:(i,n)=>{ btn.textContent=`Memverifikasi... (${i}/${n})`; }});
   }
   btn.disabled=false; btn.textContent='Simpan Kantong';
   if(!v.ok){ toast('⚠️ Belum tersimpan dengan benar. Cek koneksi & coba lagi.'); return; }
