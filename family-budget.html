@@ -193,6 +193,26 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .del-cancel { padding: 14px; border-radius: 12px; border: 1.5px solid #DADADA; background: #fff; font-size: 15px; font-weight: 500; color: #888; cursor: pointer; }
 .del-ok { padding: 14px; border-radius: 12px; border: none; background: #e05252; font-size: 15px; font-weight: 600; color: #fff; cursor: pointer; }
 
+/* TX PREVIEW */
+.tx-preview-icon-wrap { width: 52px; height: 52px; border-radius: 16px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; }
+.tx-preview-icon-wrap i { font-size: 24px; color: #5D7599; }
+.tx-preview-amount { text-align: center; font-size: 26px; font-weight: 700; color: #3a3a3a; margin-bottom: 4px; }
+.tx-preview-cat { text-align: center; font-size: 13px; color: #888; margin-bottom: 1.25rem; }
+.tx-preview-rows { border-top: 1px solid #f0f0f0; padding-top: 0.75rem; }
+.tx-preview-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 8px 0; font-size: 14px; }
+.tx-preview-row-label { color: #888; flex-shrink: 0; }
+.tx-preview-row-val { color: #3a3a3a; font-weight: 500; text-align: right; word-break: break-word; }
+
+/* GOAL PRIORITY STARS */
+.goal-priority-stars { display: flex; gap: 6px; margin-bottom: 4px; }
+.goal-priority-stars i { font-size: 28px; color: #DADADA; cursor: pointer; transition: color 0.15s; }
+.goal-priority-stars i.filled { color: #f5a623; }
+.goal-card-priority { display: inline-flex; gap: 1px; margin-left: 6px; vertical-align: middle; }
+.goal-card-priority i { font-size: 12px; color: #f5a623; }
+.goal-sort-bar { display: flex; justify-content: flex-end; margin-bottom: 0.6rem; }
+.goal-sort-btn { display: flex; align-items: center; gap: 5px; font-size: 12.5px; color: #5D7599; background: #eef1f6; border: none; border-radius: 8px; padding: 6px 10px; cursor: pointer; }
+.goal-sort-btn.active { background: #5D7599; color: #fff; }
+
 .save-btn { width: 100%; padding: 15px; color: #fff; border: none; border-radius: 14px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 4px; display: block; }
 .save-btn.in  { background: var(--accent-in); }
 .save-btn.out { background: var(--accent-out); }
@@ -557,6 +577,17 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
   </div>
 </div>
 
+<!-- TX PREVIEW MODAL -->
+<div class="modal-overlay" id="modal-tx-preview">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="tx-preview-icon-wrap" id="tp-icon-wrap"><i class="ti" id="tp-icon"></i></div>
+    <p class="tx-preview-amount" id="tp-amount">–</p>
+    <p class="tx-preview-cat" id="tp-cat">–</p>
+    <div class="tx-preview-rows" id="tp-rows"></div>
+  </div>
+</div>
+
 
 <!-- PIN MODAL -->
 <div class="pin-modal-overlay" id="pin-modal">
@@ -582,6 +613,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     <input class="modal-input" type="text" inputmode="numeric" id="g-target" placeholder="0" />
     <label class="modal-label">Sudah Terkumpul (Rp)</label>
     <input class="modal-input" type="text" inputmode="numeric" id="g-collected" placeholder="0" />
+    <label class="modal-label">Prioritas</label>
+    <div class="goal-priority-stars" id="goal-priority-stars"></div>
     <button class="save-btn" style="background:var(--primary);margin-top:8px;" id="goal-submit-btn" onclick="saveGoal()">Simpan Kantong</button>
   </div>
 </div>
@@ -630,6 +663,7 @@ const USER_DISPLAY = { "pino18":"Pino", "cipcip25":"Cipcip" };
 const CATS_IN = [
   { label:"Freelance", icon:"ti-briefcase" },
   { label:"Payment WaGoMu", icon:"ti-building-bank" },
+  { label:"Payment Cerah", icon:"ti-school" },
   { label:"Jualan", icon:"ti-shopping-bag", optionalNote:true },
   { label:"Nabung", icon:"ti-pig-money", wallet:"Tabungan", optionalNote:true },
   { label:"Transfer Dompet", icon:"ti-transfer", transfer:true },
@@ -672,6 +706,41 @@ function resetTimer(){
 }
 document.addEventListener('touchstart',resetTimer);
 document.addEventListener('click',resetTimer);
+
+/* ── LOGOUT SETELAH APP DITUTUP/DI-BACKGROUND ──
+   Timer idle di atas berbasis setTimeout JS biasa, yang berhenti
+   total kalau app di-suspend/freeze oleh iOS (standalone PWA tidak
+   benar2 ditutup, cuma dibekukan - variabel JS termasuk userLogin
+   tetap utuh di memori). Mekanisme ini terpisah: setiap kali app
+   pindah ke background, simpan timestamp di sessionStorage (tidak
+   hilang saat freeze, tapi hilang total kalau app benar2 di-kill/
+   ditutup penuh dari app switcher). Saat app kembali ke foreground,
+   cek selisih waktu - kalau sudah lebih dari BACKGROUND_LOGOUT_MS,
+   paksa logout walau variabel userLogin masih terisi di memori. */
+const BACKGROUND_LOGOUT_MS=5*60*1000; // 5 menit
+function markBackgroundTime(){
+  try{ sessionStorage.setItem('fb_bg_ts', String(Date.now())); }catch(e){}
+}
+function checkBackgroundTimeout(){
+  try{
+    const ts=sessionStorage.getItem('fb_bg_ts');
+    if(!ts) return;
+    const elapsed=Date.now()-parseInt(ts,10);
+    if(elapsed>=BACKGROUND_LOGOUT_MS && userLogin){
+      const page=document.querySelector('.page.active');
+      if(page && page.id!=='page-login'){
+        toast('Sesi berakhir, app sempat ditutup.');
+        doLogout();
+      }
+    }
+  }catch(e){}
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden'){ markBackgroundTime(); }
+  else { checkBackgroundTimeout(); }
+});
+// Cek juga begitu script pertama dimuat (cover kasus app baru dibuka dari kondisi terminated/suspended)
+checkBackgroundTimeout();
 
 /* ── FORMAT ── */
 document.getElementById('m-amount').addEventListener('input',function(){
@@ -1014,6 +1083,28 @@ async function saveTransaction(){
   finally{ btn.disabled=false; btn.innerHTML='Lanjut →'; }
 }
 
+/* ── TX PREVIEW ── */
+const TX_ICON_MAP={'Freelance':'ti-briefcase','Payment WaGoMu':'ti-building-bank','Payment Cerah':'ti-school','Jualan':'ti-shopping-bag','Nabung':'ti-pig-money','Belanja Bulanan':'ti-basket','Jajan':'ti-tools-kitchen-2','Bensin':'ti-gas-station','Tagihan':'ti-receipt','Healing':'ti-walk','Narik Uang':'ti-cash','Butuh':'ti-tool','Transfer Dompet':'ti-transfer','Lainnya':'ti-dots'};
+function openTxPreview(id){
+  const tx=allTx.find(t=>t.id===id); if(!tx) return;
+  const icon=TX_ICON_MAP[tx.Kategori]||'ti-receipt';
+  document.getElementById('tp-icon').className='ti '+icon;
+  document.getElementById('tp-amount').textContent=(tx.Tipe==='in'?'+':'-')+formatRp(tx.Nominal);
+  document.getElementById('tp-amount').style.color=tx.Tipe==='in'?'#3B6D11':'#ba7517';
+  const label=tx.SubKategori?`${tx.Kategori} · ${tx.SubKategori}`:tx.Kategori;
+  document.getElementById('tp-cat').textContent=label;
+  const rows=[
+    ['Keterangan', tx.Keterangan||'–'],
+    ['Tanggal', tx.Tanggal||'–'],
+    ['Kantong', tx.Kantong||'–'],
+    ['Dicatat oleh', getUsername(tx)||tx.Username||'–'],
+  ];
+  document.getElementById('tp-rows').innerHTML=rows.map(([l,v])=>`<div class="tx-preview-row"><span class="tx-preview-row-label">${l}</span><span class="tx-preview-row-val">${v}</span></div>`).join('');
+  document.getElementById('modal-tx-preview').classList.add('open');
+}
+function closeTxPreview(){ document.getElementById('modal-tx-preview').classList.remove('open'); }
+document.getElementById('modal-tx-preview').addEventListener('click',e=>{ if(e.target===document.getElementById('modal-tx-preview')) closeTxPreview(); });
+
 /* ── DELETE TX ── */
 function openDelete(id){
   const tx=allTx.find(t=>t.id===id); if(!tx) return;
@@ -1092,11 +1183,11 @@ function renderHistory(){
     const dc=tx.Tipe==='in'?'in':'out';
     const sign=tx.Tipe==='in'?'+':'-';
     const dotClass=tx.Kantong==='Tabungan'?'dot-tab':'dot-ops';
-    const iconMap={'Freelance':'ti-briefcase','Payment WaGoMu':'ti-building-bank','Jualan':'ti-shopping-bag','Nabung':'ti-pig-money','Belanja Bulanan':'ti-basket','Jajan':'ti-tools-kitchen-2','Bensin':'ti-gas-station','Tagihan':'ti-receipt','Healing':'ti-walk','Narik Uang':'ti-cash','Butuh':'ti-tool','Transfer Dompet':'ti-transfer','Lainnya':'ti-dots'};
+    const iconMap={'Freelance':'ti-briefcase','Payment WaGoMu':'ti-building-bank','Payment Cerah':'ti-school','Jualan':'ti-shopping-bag','Nabung':'ti-pig-money','Belanja Bulanan':'ti-basket','Jajan':'ti-tools-kitchen-2','Bensin':'ti-gas-station','Tagihan':'ti-receipt','Healing':'ti-walk','Narik Uang':'ti-cash','Butuh':'ti-tool','Transfer Dompet':'ti-transfer','Lainnya':'ti-dots'};
     const icon=iconMap[tx.Kategori]||'ti-receipt';
     const label=tx.SubKategori?`${tx.Kategori} · ${tx.SubKategori}`:tx.Kategori;
     const mine=isMyTx(tx);
-    html+=`<div class="tx-item">
+    html+=`<div class="tx-item" onclick="openTxPreview('${tx.id}')">
       <div class="tx-icon ${dc}"><i class="ti ${icon}"></i></div>
       <div class="tx-info">
         <p class="tx-detail">${tx.Keterangan||'–'}</p>
@@ -1104,7 +1195,7 @@ function renderHistory(){
       </div>
       <p class="tx-amount ${dc}">${sign}${formatRp(tx.Nominal)}</p>
       <div class="tx-actions">
-        ${mine?`<button class="tx-action-btn edit" onclick="openModal('${tx.Tipe}',${JSON.stringify(tx).replace(/"/g,'&quot;')})"><i class="ti ti-pencil"></i></button><button class="tx-action-btn del" onclick="openDelete('${tx.id}')"><i class="ti ti-trash"></i></button>`:''}
+        ${mine?`<button class="tx-action-btn edit" onclick="event.stopPropagation();openModal('${tx.Tipe}',${JSON.stringify(tx).replace(/"/g,'&quot;')})"><i class="ti ti-pencil"></i></button><button class="tx-action-btn del" onclick="event.stopPropagation();openDelete('${tx.id}')"><i class="ti ti-trash"></i></button>`:''}
       </div>
     </div>`;
   });
@@ -1252,14 +1343,25 @@ async function saveGoalToSheet(data,action){
 }
 function loadGoals(){ return cachedGoals||[]; }
 
+let goalSortByPriority=false;
+function toggleGoalSort(){
+  goalSortByPriority=!goalSortByPriority;
+  renderGoals();
+}
 function renderGoals(){
   const panel=document.getElementById('goals-panel'); if(!panel) return;
   const goals=loadGoals();
-  const active=goals.filter(g=>!g.archived);
+  let active=goals.filter(g=>!g.archived);
   const archived=goals.filter(g=>g.archived);
+  if(goalSortByPriority){
+    active=[...active].sort((a,b)=>(b.priority||0)-(a.priority||0));
+  }
   updateBalanceDisplay(); // refresh digembok display
   if(cachedGoals===null){ panel.innerHTML='<p class="empty-msg">Memuat...</p>'; return; }
   let html='';
+  if(active.length>1){
+    html+=`<div class="goal-sort-bar"><button class="goal-sort-btn${goalSortByPriority?' active':''}" onclick="toggleGoalSort()"><i class="ti ti-arrows-sort"></i>${goalSortByPriority?'Diurutkan: Prioritas':'Sortir by Prioritas'}</button></div>`;
+  }
   active.forEach(g=>{ html+=goalCardHTML(g); });
   if(!active.length&&!archived.length) html='<p class="empty-msg">Belum ada kantong impian.<br>Yuk bikin yang pertama!</p>';
   if(archived.length){
@@ -1277,11 +1379,13 @@ function goalCardHTML(g){
   const done=pct>=100;
   const safe=g.nama.replace(/'/g,"\'").replace(/"/g,'&quot;');
   const mineLabel=mine>0?` <span style="color:#5D7599;font-size:10px;">(kamu: ${formatRp(mine)})</span>`:'';
+  const priority=g.priority||0;
+  const starsHTML=priority>0?`<span class="goal-card-priority">${'<i class="ti ti-star-filled"></i>'.repeat(priority)}</span>`:'';
   return `<div class="goal-card-wrap">
     <div class="goal-card${g.archived?' archived':''}" onclick="toggleGoalPopup(event,'${gid}')">
       <div class="goal-card-top">
         <div>
-          <div class="goal-card-name"><span>${g.emoji||'🎯'}</span>${g.nama}</div>
+          <div class="goal-card-name"><span>${g.emoji||'🎯'}</span>${g.nama}${starsHTML}</div>
           <div class="goal-card-meta">Target: ${formatRp(g.target)}</div>
           ${g.archived?'<span class="goal-archived-badge">Diarsipkan</span>':''}
         </div>
@@ -1406,6 +1510,15 @@ async function confirmGoalTransaction(){
 }
 
 /* ── GOAL MODAL ── */
+let selectedGoalPriority=0;
+function renderPriorityStars(){
+  const wrap=document.getElementById('goal-priority-stars');
+  wrap.innerHTML=[1,2,3,4,5].map(n=>`<i class="ti ti-star${n<=selectedGoalPriority?' ti-star-filled filled':''}" onclick="setGoalPriority(${n})"></i>`).join('');
+}
+function setGoalPriority(n){
+  selectedGoalPriority = (selectedGoalPriority===n) ? n-1 : n; // tap bintang yang sama untuk kurangi 1 (toggle halus)
+  renderPriorityStars();
+}
 function openGoalModal(id){
   editingGoalId=id||null;
   const g=id?loadGoals().find(x=>String(x.id)===String(id)):null;
@@ -1413,6 +1526,8 @@ function openGoalModal(id){
   document.getElementById('g-name').value=g?g.nama:'';
   document.getElementById('g-target').value=g&&g.target?parseInt(g.target).toLocaleString('id-ID'):'';
   document.getElementById('g-collected').value=''; // not used directly anymore
+  selectedGoalPriority = g?(g.priority||0):0;
+  renderPriorityStars();
   const sel=g?g.emoji:GOAL_EMOJIS[0];
   document.getElementById('goal-emoji-grid').innerHTML=GOAL_EMOJIS.map(e=>`<button class="goal-emoji-btn${e===sel?' selected':''}" onclick="selectGoalEmoji(this)">${e}</button>`).join('');
   document.getElementById('modal-goal').classList.add('open');
@@ -1427,11 +1542,12 @@ async function saveGoal(){
   const target=parseInt(document.getElementById('g-target').value.replace(/\./g,'').replace(/,/g,''))||0;
   const sel=document.querySelector('.goal-emoji-btn.selected');
   const emoji=sel?sel.textContent:'🎯';
+  const priority=selectedGoalPriority;
   const btn=document.getElementById('goal-submit-btn');
   btn.disabled=true; btn.textContent='Menyimpan...';
   let v;
   if(editingGoalId){
-    const goalData={id:editingGoalId,nama,emoji,target};
+    const goalData={id:editingGoalId,nama,emoji,target,priority};
     await saveGoalToSheet(goalData,'editGoal');
     v=await verifyAfterGoalSave(({goals})=>{
       const g=goals.find(x=>String(x.id)===String(editingGoalId));
@@ -1439,7 +1555,7 @@ async function saveGoal(){
     },{onProgress:(i,n)=>{ btn.textContent=`Memverifikasi... (${i}/${n})`; }});
   } else {
     const id=Date.now().toString();
-    const goalData={id,nama,emoji,target,terkumpul:0,kontribusi:'{}',archived:false};
+    const goalData={id,nama,emoji,target,priority,terkumpul:0,kontribusi:'{}',archived:false};
     await saveGoalToSheet(goalData,'addGoal');
     v=await verifyAfterGoalSave(({goals})=>goals.some(g=>String(g.id)===String(id)),{onProgress:(i,n)=>{ btn.textContent=`Memverifikasi... (${i}/${n})`; }});
   }
@@ -1492,6 +1608,54 @@ async function confirmGoalDelete(){
 
 document.getElementById('pin-modal').addEventListener('click',e=>{ if(e.target===document.getElementById('pin-modal')) closePinModal(); });
 document.getElementById('modal-goal-delete').addEventListener('click',e=>{ if(e.target===document.getElementById('modal-goal-delete')) closeGoalDelete(); });
+
+/* ── SWIPE DOWN TO CLOSE ──
+   Pola umum di app mobile: drag sheet ke bawah untuk menutup popup.
+   Helper generik, dipasang ke setiap pasangan overlay+sheet+closeFn
+   tanpa mengubah logic close masing-masing (tetap pakai fungsi close
+   yang sudah ada supaya state cleanup tidak berubah). */
+function enableSwipeToClose(overlaySelector, sheetSelector, closeFn){
+  const overlay=document.querySelector(overlaySelector);
+  const sheet=overlay?overlay.querySelector(sheetSelector):null;
+  if(!overlay||!sheet) return;
+  let startY=0, currentY=0, dragging=false, startedAtTop=false;
+  sheet.style.transition='transform 0.25s ease, opacity 0.25s ease';
+  sheet.addEventListener('touchstart',e=>{
+    // Hanya mulai drag kalau sheet sedang di posisi scroll paling atas,
+    // supaya tidak konflik dengan scroll konten panjang di dalam sheet
+    // (misal daftar kategori, riwayat goal, dll).
+    startedAtTop = sheet.scrollTop<=0;
+    if(!startedAtTop) return;
+    startY=e.touches[0].clientY; currentY=startY; dragging=true;
+    sheet.style.transition='none';
+  },{passive:true});
+  sheet.addEventListener('touchmove',e=>{
+    if(!dragging) return;
+    currentY=e.touches[0].clientY;
+    const delta=currentY-startY;
+    if(delta>0){ sheet.style.transform=`translateY(${delta}px)`; }
+  },{passive:true});
+  sheet.addEventListener('touchend',()=>{
+    if(!dragging) return;
+    dragging=false;
+    sheet.style.transition='transform 0.25s ease, opacity 0.25s ease';
+    const delta=currentY-startY;
+    const threshold=Math.min(120, sheet.offsetHeight*0.3);
+    if(delta>threshold){
+      sheet.style.transform=`translateY(100%)`;
+      setTimeout(()=>{ closeFn(); sheet.style.transform=''; },200);
+    } else {
+      sheet.style.transform='';
+    }
+  });
+}
+enableSwipeToClose('#modal-add','.modal-sheet',closeModal);
+enableSwipeToClose('#modal-confirm','.modal-sheet',closeConfirm);
+enableSwipeToClose('#modal-delete','.modal-sheet',closeDelete);
+enableSwipeToClose('#modal-tx-preview','.modal-sheet',closeTxPreview);
+enableSwipeToClose('#modal-goal','.modal-sheet',closeGoalModal);
+enableSwipeToClose('#modal-goal-delete','.modal-sheet',closeGoalDelete);
+enableSwipeToClose('#goal-confirm-overlay','.goal-confirm-sheet',closeGoalConfirm);
 
 </script>
 </body>
