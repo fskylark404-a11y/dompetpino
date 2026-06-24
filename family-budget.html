@@ -50,14 +50,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .balance-amount.negative { color: #ffb3b3; }
 
 /* WALLET CARDS */
-.wallet-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding-bottom: 1.25rem; }
-.wallet-card { border-radius: 14px; padding: 10px 10px; min-width: 0; }
+.wallet-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding-bottom: 1.25rem; }
+.wallet-card { border-radius: 14px; padding: 12px 14px; }
 .wallet-card.tabungan { background: rgba(46,125,82,0.85); }
 .wallet-card.operasional { background: rgba(255,255,255,0.15); }
-.wallet-card.saku { background: rgba(255,255,255,0.15); }
-.wc-label { color: rgba(255,255,255,0.75); font-size: 10.5px; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.wc-label i { font-size: 13px; flex-shrink: 0; }
-.wc-amount { color: #fff; font-size: 13.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wc-label { color: rgba(255,255,255,0.75); font-size: 11px; margin-bottom: 4px; display: flex; align-items: center; gap: 5px; }
+.wc-label i { font-size: 13px; }
+.wc-amount { color: #fff; font-size: 15px; font-weight: 500; }
 .wc-amount.negative { color: #ffb3b3; }
 
 /* ACTIONS CARD */
@@ -96,7 +95,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .tx-cat { font-size: 11px; color: #888; margin-top: 2px; display: flex; align-items: center; gap: 4px; }
 .tx-cat .dot-tab { width: 6px; height: 6px; border-radius: 50%; background: #2e7d52; display: inline-block; }
 .tx-cat .dot-ops { width: 6px; height: 6px; border-radius: 50%; background: #5D7599; display: inline-block; }
-.tx-cat .dot-saku { width: 6px; height: 6px; border-radius: 50%; background: #ba7517; display: inline-block; }
 .tx-amount { font-size: 13px; font-weight: 500; white-space: nowrap; }
 .tx-amount.out { color: #ba7517; }
 .tx-amount.in  { color: #3B6D11; }
@@ -165,15 +163,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
 /* WALLET SELECTOR */
 .wallet-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1rem; }
-.wallet-selector.cols-3 { grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
 .wallet-btn { padding: 12px 8px; border-radius: 12px; border: 1.5px solid #DADADA; background: #fff; font-size: 13px; font-weight: 500; color: #3a3a3a; cursor: pointer; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.wallet-selector.cols-3 .wallet-btn { padding: 10px 4px; font-size: 11px; gap: 4px; }
 .wallet-btn i { font-size: 22px; display: block; line-height: 1; }
-.wallet-selector.cols-3 .wallet-btn i { font-size: 19px; }
 .wallet-btn span { display: block; font-size: 11px; }
 .wallet-btn.selected-tab { border-color: #2e7d52; background: #eaf3de; color: #2e7d52; }
 .wallet-btn.selected-ops { border-color: #5D7599; background: #e8eef5; color: #5D7599; }
-.wallet-btn.selected-saku { border-color: #ba7517; background: #faeeda; color: #ba7517; }
 
 /* CONFIRM MODAL */
 #modal-confirm .modal-sheet { text-align: center; }
@@ -404,10 +398,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
           <p class="wc-label"><i class="ti ti-wallet"></i> Operasional</p>
           <p class="wc-amount" id="w-operasional">Rp*******</p>
         </div>
-        <div class="wallet-card saku" id="wc-saku" onmousedown="holdReveal('saku')" ontouchstart="holdReveal('saku')" onmouseup="hideReveal('saku')" ontouchend="hideReveal('saku')">
-          <p class="wc-label"><i class="ti ti-cash"></i> Uang Saku</p>
-          <p class="wc-amount" id="w-saku">Rp*******</p>
-        </div>
       </div>
     </div>
   </div>
@@ -484,10 +474,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     </div>
     <div class="stats-card">
       <p class="stats-card-title">Per Dompet</p>
-      <div class="summary-grid" style="margin:0;grid-template-columns:1fr 1fr 1fr;gap:8px;">
-        <div class="summary-tile" style="padding:0.7rem 0.6rem;"><p class="summary-tile-label">🟢 Tabungan</p><p class="summary-tile-val in" id="stat-tab" style="font-size:13px;">–</p></div>
-        <div class="summary-tile" style="padding:0.7rem 0.6rem;"><p class="summary-tile-label">🔵 Operasional</p><p class="summary-tile-val in" id="stat-ops" style="font-size:13px;">–</p></div>
-        <div class="summary-tile" style="padding:0.7rem 0.6rem;"><p class="summary-tile-label">🟠 Uang Saku</p><p class="summary-tile-val in" id="stat-saku" style="font-size:13px;">–</p></div>
+      <div class="summary-grid" style="margin:0;">
+        <div class="summary-tile"><p class="summary-tile-label">🟢 Tabungan</p><p class="summary-tile-val in" id="stat-tab">–</p></div>
+        <div class="summary-tile"><p class="summary-tile-label">🔵 Operasional</p><p class="summary-tile-val in" id="stat-ops">–</p></div>
       </div>
     </div>
     <div class="stats-card">
@@ -530,15 +519,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
     <div id="wallet-selector-wrap">
     <label class="modal-label">Sumber Dana</label>
-    <div class="wallet-selector" id="wallet-selector-grid">
+    <div class="wallet-selector">
       <button class="wallet-btn" id="wb-tab" onclick="selectWallet('Tabungan')">
         <i class="ti ti-pig-money"></i> Tabungan
       </button>
       <button class="wallet-btn" id="wb-ops" onclick="selectWallet('Operasional')">
         <i class="ti ti-wallet"></i> Operasional
-      </button>
-      <button class="wallet-btn" id="wb-saku" onclick="selectWallet('Uang Saku')" style="display:none;">
-        <i class="ti ti-cash"></i> Uang Saku
       </button>
     </div>
     </div>
@@ -553,15 +539,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
           <i class="ti ti-wallet"></i>
           <span style="font-size:11px;">Operasional → Tabungan</span>
         </button>
-      </div>
-    </div>
-    <div id="narik-wrap" style="display:none;">
-      <label class="modal-label">Arah Penarikan</label>
-      <div class="wallet-selector" style="grid-template-columns:1fr;">
-        <div class="wallet-btn selected-saku" style="cursor:default;">
-          <i class="ti ti-cash"></i>
-          <span style="font-size:11px;">Operasional → Uang Saku</span>
-        </div>
       </div>
     </div>
 
@@ -698,7 +675,7 @@ const CATS_OUT = [
   { label:"Bensin", icon:"ti-gas-station" },
   { label:"Tagihan", icon:"ti-receipt", sub:["IndiHome","Listrik","Paket Internet","Lainnya"] },
   { label:"Healing", icon:"ti-walk", optionalNote:true },
-  { label:"Narik Uang", icon:"ti-cash", narik:true },
+  { label:"Narik Uang", icon:"ti-cash", optionalNote:true },
   { label:"Butuh", icon:"ti-tool", manual:true },
 ];
 const CAT_COLORS = ['#ba7517','#5D7599','#2e7d52','#C2C4B6','#ABB6C8','#888'];
@@ -828,7 +805,6 @@ function doLogout(){
   document.getElementById('total-aset').textContent='Rp*******';
   document.getElementById('w-tabungan').textContent='Rp*******';
   document.getElementById('w-operasional').textContent='Rp*******';
-  document.getElementById('w-saku').textContent='Rp*******';
   document.getElementById('eye-icon').className='ti ti-eye-off';
   const btn=document.getElementById('modal-save-btn');
   if(btn){ btn.disabled=false; btn.innerHTML='Lanjut →'; }
@@ -906,7 +882,6 @@ function updateBalanceDisplay(){
   const total=calcSaldo();
   const tab=calcSaldo('Tabungan');
   const ops=calcSaldo('Operasional');
-  const saku=calcSaldo('Uang Saku');
   const digembok=calcDigembok();
   const bebas=total-Math.min(digembok,Math.max(0,total));
   const fmt=(v,el)=>{ if(!el)return; const neg=v<0; el.textContent=(neg?'-':'')+formatRp(v); el.classList.toggle('negative',neg); };
@@ -915,13 +890,11 @@ function updateBalanceDisplay(){
     document.getElementById('total-aset').textContent='Rp*******';
     document.getElementById('w-tabungan').textContent='Rp*******';
     document.getElementById('w-operasional').textContent='Rp*******';
-    document.getElementById('w-saku').textContent='Rp*******';
   } else {
     fmt(bebas,document.getElementById('total-balance'));
     document.getElementById('total-aset').textContent=formatRp(total);
     fmt(tab,document.getElementById('w-tabungan'));
     fmt(ops,document.getElementById('w-operasional'));
-    fmt(saku,document.getElementById('w-saku'));
   }
   // Update digembok display in goals panel
   const digEl=document.getElementById('goals-digembok-val');
@@ -930,12 +903,10 @@ function updateBalanceDisplay(){
 
 /* ── TAP & HOLD ── */
 let holdTimers={};
-const WALLET_EL_MAP={tab:'w-tabungan',ops:'w-operasional',saku:'w-saku'};
-const WALLET_NAME_MAP={tab:'Tabungan',ops:'Operasional',saku:'Uang Saku'};
 function holdReveal(w){
   holdTimers[w]=setTimeout(()=>{
-    const elId=WALLET_EL_MAP[w];
-    const val=calcSaldo(WALLET_NAME_MAP[w]);
+    const elId=w==='tab'?'w-tabungan':'w-operasional';
+    const val=w==='tab'?calcSaldo('Tabungan'):calcSaldo('Operasional');
     const neg=val<0;
     document.getElementById(elId).textContent=(neg?'-':'')+formatRp(val);
     document.getElementById(elId).classList.toggle('negative',neg);
@@ -943,7 +914,7 @@ function holdReveal(w){
 }
 function hideReveal(w){
   clearTimeout(holdTimers[w]);
-  const elId=WALLET_EL_MAP[w];
+  const elId=w==='tab'?'w-tabungan':'w-operasional';
   if(!isBlurred) return;
   document.getElementById(elId).textContent='Rp*******';
   document.getElementById(elId).classList.remove('negative');
@@ -963,9 +934,6 @@ function openModal(type,editData){
   document.getElementById('subcat-wrap').style.display='none';
   document.getElementById('manual-wrap').style.display='none';
   document.getElementById('m-manual').dataset.required='false';
-  document.getElementById('transfer-wrap').style.display='none';
-  document.getElementById('narik-wrap').style.display='none';
-  document.getElementById('wallet-selector-wrap').style.display='block';
   // Reset save button
   const saveBtn=document.getElementById('modal-save-btn');
   saveBtn.disabled=false; saveBtn.innerHTML='Lanjut →';
@@ -977,24 +945,10 @@ function openModal(type,editData){
   if(editData){
     rawAmount=String(editData.Nominal);
     document.getElementById('m-amount').value=parseInt(rawAmount).toLocaleString('id-ID');
-    // Transaksi lama berkategori "Narik Uang" (sebelum fitur Uang
-    // Saku ada) sengaja TIDAK di-treat sebagai mode narik/transfer
-    // saat diedit - tetap dianggap expense biasa apa adanya, sesuai
-    // keputusan supaya histori lama tidak berubah perilakunya.
-    // selectCat tetap dipanggil utk styling tombol kategori terpilih,
-    // tapi mode narik-wrap akan otomatis ke-trigger oleh selectCat()
-    // karena catDef.narik bernilai true. Untuk mencegah itu saat edit,
-    // kita override tampilan setelah selectCat dipanggil di bawah ini.
     selectCat(editData.Kategori,true);
     if(editData.SubKategori) selectSubCat(editData.SubKategori);
     if(editData.Keterangan) document.getElementById('m-manual').value=editData.Keterangan;
     selectWallet(editData.Kantong);
-    if(editData.Kategori==='Narik Uang'){
-      document.getElementById('narik-wrap').style.display='none';
-      document.getElementById('wallet-selector-wrap').style.display='block';
-      document.getElementById('manual-wrap').style.display='block';
-      document.getElementById('m-manual').placeholder='Keterangan (opsional)...';
-    }
     titleEl.textContent=(type==='in'?'✏️ Edit Cash In':'✏️ Edit Cash Out');
   } else { updateWalletBtns(); }
   document.getElementById('modal-add').classList.add('open');
@@ -1035,25 +989,9 @@ function selectCat(label){
     manualWrap.style.display='block';
   }
   const transferWrap=document.getElementById('transfer-wrap');
-  const narikWrap=document.getElementById('narik-wrap');
-  const isNarik=catDef&&catDef.narik;
   if(transferWrap) transferWrap.style.display=(catDef&&catDef.transfer)?'block':'none';
-  if(narikWrap) narikWrap.style.display=isNarik?'block':'none';
-  if((catDef&&catDef.transfer)||isNarik) document.getElementById('wallet-selector-wrap').style.display='none';
+  if(catDef&&catDef.transfer) document.getElementById('wallet-selector-wrap').style.display='none';
   else document.getElementById('wallet-selector-wrap').style.display='block';
-  // Tombol "Uang Saku" di Sumber Dana cuma relevan untuk Cash Out
-  // transaksi biasa (bukan Cash In, bukan mode transfer/narik).
-  const wbSaku=document.getElementById('wb-saku');
-  const selGrid=document.getElementById('wallet-selector-grid');
-  if(wbSaku&&selGrid){
-    if(type==='out'){
-      wbSaku.style.display='flex';
-      selGrid.classList.add('cols-3');
-    } else {
-      wbSaku.style.display='none';
-      selGrid.classList.remove('cols-3');
-    }
-  }
 }
 function selectSubCat(label){
   selectedSubCat=label;
@@ -1080,8 +1018,6 @@ function selectWallet(w){ selectedWallet=w; updateWalletBtns(); }
 function updateWalletBtns(){
   document.getElementById('wb-tab').className='wallet-btn'+(selectedWallet==='Tabungan'?' selected-tab':'');
   document.getElementById('wb-ops').className='wallet-btn'+(selectedWallet==='Operasional'?' selected-ops':'');
-  const wbSaku=document.getElementById('wb-saku');
-  if(wbSaku) wbSaku.className='wallet-btn'+(selectedWallet==='Uang Saku'?' selected-saku':'');
 }
 let transferFrom='',transferTo='';
 function selectTransfer(from,to){
@@ -1103,15 +1039,14 @@ function showConfirm(){
   const manual=document.getElementById('m-manual').value.trim();
   if(document.getElementById('m-manual').dataset.required==='true'&&!manual){ toast('Isi keterangan dulu.'); return; }
   const sign=currentType==='in'?'+':'-';
-  const isNarik=catDef&&catDef.narik;
-  const catLabel=catDef&&catDef.transfer?`Transfer: ${transferFrom} → ${transferTo}`:(isNarik?`Narik Uang: Operasional → Uang Saku`:(selectedSubCat?`${selectedCat} · ${selectedSubCat}`:selectedCat));
+  const catLabel=catDef&&catDef.transfer?`Transfer: ${transferFrom} → ${transferTo}`:(selectedSubCat?`${selectedCat} · ${selectedSubCat}`:selectedCat);
   const keterangan=manual||catLabel;
   document.getElementById('confirm-icon').className='confirm-icon '+currentType;
   document.getElementById('confirm-icon-i').className='ti '+(currentType==='in'?'ti-arrow-down-left':'ti-arrow-up-right');
   document.getElementById('confirm-amount').className='confirm-amount '+currentType;
   document.getElementById('confirm-amount').textContent=sign+formatRp(amount);
   document.getElementById('confirm-cat').textContent=catLabel;
-  document.getElementById('confirm-detail').textContent=isNarik?keterangan:`${keterangan} · ${selectedWallet}`;
+  document.getElementById('confirm-detail').textContent=`${keterangan} · ${selectedWallet}`;
   document.getElementById('confirm-ok-btn').className='confirm-ok '+currentType;
   document.getElementById('modal-confirm').classList.add('open');
 }
@@ -1126,16 +1061,7 @@ async function saveTransaction(){
   const catDef=(currentType==='in'?CATS_IN:CATS_OUT).find(c=>c.label===selectedCat);
   const manual=document.getElementById('m-manual').value.trim();
   const isTransfer=catDef&&catDef.transfer;
-  // "Narik Uang" (transaksi baru) bukan expense biasa lagi - ini
-  // mekanisme double-entry sama seperti Transfer Dompet, tapi arah
-  // tetap (Operasional -> Uang Saku) dan kategori yang tersimpan
-  // di kedua baris tetap "Narik Uang" (bukan "Transfer Dompet"),
-  // supaya laporan/statistik per kategori tetap bisa membedakan
-  // keduanya. Transaksi LAMA berkategori "Narik Uang" yang sudah
-  // ada sebelum fitur ini tidak tersentuh oleh logic ini sama
-  // sekali (mereka tetap baris expense tunggal apa adanya).
-  const isNarik=!editingTxId && catDef&&catDef.narik;
-  const keterangan=isTransfer?`Transfer Dompet: ${transferFrom} → ${transferTo}`:(isNarik?(manual||'Narik Uang'):(manual||(selectedSubCat?`${selectedCat} · ${selectedSubCat}`:selectedCat)));
+  const keterangan=isTransfer?`Transfer Dompet: ${transferFrom} → ${transferTo}`:(manual||(selectedSubCat?`${selectedCat} · ${selectedSubCat}`:selectedCat));
   const btn=document.getElementById('modal-save-btn');
   btn.innerHTML='<span class="spinner"></span>Menyimpan...'; btn.disabled=true;
   const now=new Date();
@@ -1153,16 +1079,6 @@ async function saveTransaction(){
       if(!v.ok){ toast('⚠️ Transfer belum tersimpan. Cek koneksi & coba lagi.'); return; }
       allTx=v.data;
       toast('✅ Transfer berhasil!');
-    } else if(isNarik){
-      const idOut='tx_'+Date.now()+'_out';
-      const idIn='tx_'+(Date.now()+1)+'_in';
-      await fetchWithTimeout(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({tanggal,username:userLogin,tipe:'out',kategori:'Narik Uang',subkategori:'',keterangan,nominal:amount,kantong:'Operasional',id:idOut,action:'add'})});
-      await fetchWithTimeout(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({tanggal,username:userLogin,tipe:'in',kategori:'Narik Uang',subkategori:'',keterangan,nominal:amount,kantong:'Uang Saku',id:idIn,action:'add'})});
-      btn.innerHTML='<span class="spinner"></span>Memverifikasi...';
-      const v=await verifyAfterSave(list=>list.some(t=>t.id===idOut)&&list.some(t=>t.id===idIn));
-      if(!v.ok){ toast('⚠️ Penarikan belum tersimpan. Cek koneksi & coba lagi.'); return; }
-      allTx=v.data;
-      toast('✅ Uang berhasil ditarik ke Saku!');
     } else {
       await fetchWithTimeout(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
       btn.innerHTML='<span class="spinner"></span>Memverifikasi...';
@@ -1280,7 +1196,7 @@ function renderHistory(){
     if(tx.Tanggal!==lastDate){ html+=`<p class="history-date-label">${tx.Tanggal||'–'}</p>`; lastDate=tx.Tanggal; }
     const dc=tx.Tipe==='in'?'in':'out';
     const sign=tx.Tipe==='in'?'+':'-';
-    const dotClass=tx.Kantong==='Tabungan'?'dot-tab':(tx.Kantong==='Uang Saku'?'dot-saku':'dot-ops');
+    const dotClass=tx.Kantong==='Tabungan'?'dot-tab':'dot-ops';
     const iconMap={'Freelance':'ti-briefcase','Payment WaGoMu':'ti-building-bank','Payment Cerah':'ti-school','Jualan':'ti-shopping-bag','Nabung':'ti-pig-money','Belanja Bulanan':'ti-basket','Jajan':'ti-tools-kitchen-2','Bensin':'ti-gas-station','Tagihan':'ti-receipt','Healing':'ti-walk','Narik Uang':'ti-cash','Butuh':'ti-tool','Transfer Dompet':'ti-transfer','Lainnya':'ti-dots'};
     const icon=iconMap[tx.Kategori]||'ti-receipt';
     const label=tx.SubKategori?`${tx.Kategori} · ${tx.SubKategori}`:tx.Kategori;
@@ -1320,7 +1236,6 @@ function renderStats(){
   const fmtSaldo=(v,id)=>{ const el=document.getElementById(id); el.textContent=(v<0?'-':'')+formatRp(v); el.style.color=v<0?'#e05252':v===0?'#888':'#3B6D11'; };
   fmtSaldo(calcSaldo('Tabungan'),'stat-tab');
   fmtSaldo(calcSaldo('Operasional'),'stat-ops');
-  fmtSaldo(calcSaldo('Uang Saku'),'stat-saku');
   const catMap={};
   myTx.filter(t=>t.Tipe!=='in').forEach(t=>{ catMap[t.Kategori]=(catMap[t.Kategori]||0)+(+t.Nominal||0); });
   const cats=Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
