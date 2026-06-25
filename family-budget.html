@@ -14,13 +14,18 @@
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html { height: -webkit-fill-available; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #5D7599; min-height: 100vh; min-height: -webkit-fill-available; }
+body:has(#app.theme-a) { background: #147587; }
+body:has(#app.theme-b) { background: #2A0800; }
+body:has(#app.theme-c) { background: #2c2c2c; }
 
 :root { --primary:#5D7599; --accent-in:#5D7599; --accent-out:#ba7517; --bg-main:#5D7599; --bg-body:#f4f6fb; --tabungan:#2e7d52; --operasional:#5D7599; }
 .theme-a { --primary:#147587; --accent-in:#147587; --accent-out:#FA7E5C; --bg-main:#147587; --bg-body:#F3ECE5; }
 .theme-b { --primary:#2A0800; --accent-in:#775144; --accent-out:#2A0800; --bg-main:#2A0800; --bg-body:#F4D8D8; }
+.theme-c { --primary:#2c2c2c; --accent-in:#2c2c2c; --accent-out:#121212; --bg-main:#2c2c2c; --bg-body:#eaeaea; }
 
 .page { display: none; flex-direction: column; width: 100%; height: 100vh; height: -webkit-fill-available; overflow: hidden; }
 .page.active { display: flex; }
+#app { min-height: 100vh; min-height: -webkit-fill-available; }
 
 /* LOGIN */
 #page-login { background: var(--bg-main); align-items: center; justify-content: center; padding: 2rem; padding-top: max(env(safe-area-inset-top,20px),3rem); }
@@ -54,7 +59,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .wallet-card { border-radius: 14px; padding: 10px 10px; min-width: 0; }
 .wallet-card.tabungan { background: rgba(46,125,82,0.85); }
 .wallet-card.operasional { background: rgba(255,255,255,0.15); }
-.wallet-card.saku { background: rgba(255,255,255,0.15); }
+.wallet-card.saku { background: rgba(186,117,23,0.85); }
 .wc-label { color: rgba(255,255,255,0.75); font-size: 10.5px; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .wc-label i { font-size: 13px; flex-shrink: 0; }
 .wc-amount { color: #fff; font-size: 13.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -135,6 +140,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .theme-dot-0 { background: #5D7599; }
 .theme-dot-a { background: #147587; }
 .theme-dot-b { background: #2A0800; }
+.theme-dot-c { background: #2c2c2c; }
 .dd-divider { height: 0.5px; background: #eee; margin: 2px 0; }
 .dd-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; cursor: pointer; font-size: 14px; color: #3a3a3a; }
 .dd-item i { font-size: 17px; color: var(--primary); }
@@ -379,6 +385,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
             <div class="theme-dot theme-dot-0 active" id="dot-0" onclick="setTheme('default')"></div>
             <div class="theme-dot theme-dot-a" id="dot-a" onclick="setTheme('a')"></div>
             <div class="theme-dot theme-dot-b" id="dot-b" onclick="setTheme('b')"></div>
+            <div class="theme-dot theme-dot-c" id="dot-c" onclick="setTheme('c')"></div>
           </div>
           <div class="dd-divider"></div>
           <div class="dd-item" onclick="doLogout()"><i class="ti ti-logout"></i> Logout</div>
@@ -486,8 +493,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
       <p class="stats-card-title">Per Dompet</p>
       <div class="summary-grid" style="margin:0;grid-template-columns:1fr 1fr 1fr;gap:8px;">
         <div class="summary-tile" style="padding:0.7rem 0.6rem;"><p class="summary-tile-label">🟢 Tabungan</p><p class="summary-tile-val in" id="stat-tab" style="font-size:13px;">–</p></div>
-        <div class="summary-tile" style="padding:0.7rem 0.6rem;"><p class="summary-tile-label">🔵 Operasional</p><p class="summary-tile-val in" id="stat-ops" style="font-size:13px;">–</p></div>
-        <div class="summary-tile" style="padding:0.7rem 0.6rem;"><p class="summary-tile-label">🟠 Uang Saku</p><p class="summary-tile-val in" id="stat-saku" style="font-size:13px;">–</p></div>
+        <div class="summary-tile" style="padding:0.7rem 0.6rem;"><p class="summary-tile-label">🔵 Operasional</p><p class="summary-tile-val in" id="stat-ops" style="font-size:13px;">–</p><p class="summary-tile-breakdown" id="stat-ops-breakdown" style="font-size:10px;color:#999;margin-top:3px;line-height:1.5;">–</p></div>
+        <div class="summary-tile" style="padding:0.7rem 0.6rem;"><p class="summary-tile-label">🟠 Uang Saku</p><p class="summary-tile-val in" id="stat-saku" style="font-size:13px;">–</p><p class="summary-tile-breakdown" id="stat-saku-breakdown" style="font-size:10px;color:#999;margin-top:3px;line-height:1.5;">–</p></div>
       </div>
     </div>
     <div class="stats-card">
@@ -1301,6 +1308,33 @@ function renderHistory(){
 }
 
 /* ── STATS ── */
+/* Hitung saldo per-username untuk wallet tertentu, dari list transaksi
+   yang sudah diberikan (biasanya mTx = transaksi bulan berjalan).
+   Fungsi baru ini TIDAK menggantikan calcSaldo() yang sudah ada -
+   calcSaldo() tetap dipakai apa adanya untuk semua tampilan saldo
+   utama (Beranda & tile utama Statistik), supaya tidak ada fungsi
+   lama yang berubah perilakunya. Ini cuma untuk breakdown tambahan. */
+function calcSaldoByUserFromList(txList,wallet){
+  const result={};
+  txList.forEach(t=>{
+    if(wallet&&t.Kantong!==wallet) return;
+    const uname=getUsername(t).toLowerCase();
+    const key=USERS.includes(uname)?uname:'';
+    if(!key) return; // transaksi tanpa username dikenali, dilewati dari breakdown
+    if(!result[key]) result[key]=0;
+    result[key]+= t.Tipe==='in'?(+t.Nominal||0):-(+t.Nominal||0);
+  });
+  return result;
+}
+function renderBreakdownLine(elId,result){
+  const el=document.getElementById(elId); if(!el) return;
+  const parts=USERS.map(u=>{
+    const v=result[u]||0;
+    const name=USER_DISPLAY[u]||u;
+    return `${name}: ${v<0?'-':''}${formatRp(v)}`;
+  });
+  el.textContent=parts.join('  ·  ');
+}
 function renderStats(){
   const now=new Date();
   document.getElementById('stats-period').textContent=now.toLocaleDateString('id-ID',{month:'long',year:'numeric'});
@@ -1321,6 +1355,10 @@ function renderStats(){
   fmtSaldo(calcSaldo('Tabungan'),'stat-tab');
   fmtSaldo(calcSaldo('Operasional'),'stat-ops');
   fmtSaldo(calcSaldo('Uang Saku'),'stat-saku');
+  // Breakdown per-user (bulan berjalan) - khusus Operasional & Uang
+  // Saku, sesuai permintaan. Tabungan tidak diberi breakdown.
+  renderBreakdownLine('stat-ops-breakdown', calcSaldoByUserFromList(mTx,'Operasional'));
+  renderBreakdownLine('stat-saku-breakdown', calcSaldoByUserFromList(mTx,'Uang Saku'));
   const catMap={};
   myTx.filter(t=>t.Tipe!=='in').forEach(t=>{ catMap[t.Kategori]=(catMap[t.Kategori]||0)+(+t.Nominal||0); });
   const cats=Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
