@@ -973,6 +973,15 @@ function openModal(type,editData){
   document.getElementById('transfer-wrap').style.display='none';
   document.getElementById('narik-wrap').style.display='none';
   document.getElementById('wallet-selector-wrap').style.display='block';
+  // Tombol "Uang Saku" di Sumber Dana sekarang relevan untuk Cash In
+  // MAUPUN Cash Out (sebelumnya cuma Cash Out). Di-set di sini supaya
+  // tampilannya benar sejak modal dibuka, SEBELUM kategori dipilih -
+  // sebelumnya ini hanya diatur di dalam selectCat(), yang membuat
+  // tampilan awal modal (sebelum klik kategori apapun) tidak sinkron
+  // dengan tampilan setelah kategori dipilih (bug visual).
+  const wbSakuInit=document.getElementById('wb-saku');
+  const selGridInit=document.getElementById('wallet-selector-grid');
+  if(wbSakuInit&&selGridInit){ wbSakuInit.style.display='flex'; selGridInit.classList.add('cols-3'); }
   // Reset save button
   const saveBtn=document.getElementById('modal-save-btn');
   saveBtn.disabled=false; saveBtn.innerHTML='Lanjut →';
@@ -1048,19 +1057,14 @@ function selectCat(label){
   if(narikWrap) narikWrap.style.display=isNarik?'block':'none';
   if((catDef&&catDef.transfer)||isNarik) document.getElementById('wallet-selector-wrap').style.display='none';
   else document.getElementById('wallet-selector-wrap').style.display='block';
-  // Tombol "Uang Saku" di Sumber Dana cuma relevan untuk Cash Out
-  // transaksi biasa (bukan Cash In, bukan mode transfer/narik).
+  // Tombol "Uang Saku" di Sumber Dana sekarang relevan untuk Cash In
+  // MAUPUN Cash Out (sebelumnya cuma Cash Out). Selalu ditampilkan
+  // di sini selama wallet-selector-wrap sendiri terlihat (diatur di
+  // atas) - elemen induknya yang menangani kapan seluruh Sumber Dana
+  // disembunyikan (mode transfer/narik), bukan logic ini.
   const wbSaku=document.getElementById('wb-saku');
   const selGrid=document.getElementById('wallet-selector-grid');
-  if(wbSaku&&selGrid){
-    if(type==='out'){
-      wbSaku.style.display='flex';
-      selGrid.classList.add('cols-3');
-    } else {
-      wbSaku.style.display='none';
-      selGrid.classList.remove('cols-3');
-    }
-  }
+  if(wbSaku&&selGrid){ wbSaku.style.display='flex'; selGrid.classList.add('cols-3'); }
 }
 function selectSubCat(label){
   selectedSubCat=label;
