@@ -702,6 +702,7 @@ const CATS_IN = [
 const CATS_OUT = [
   { label:"Belanja Bulanan", icon:"ti-basket" },
   { label:"Jajan", icon:"ti-tools-kitchen-2", optionalNote:true },
+  { label:"Parkir", icon:"ti-parking", optionalNote:true },
   { label:"Bensin", icon:"ti-gas-station" },
   { label:"Tagihan", icon:"ti-receipt", sub:["IndiHome","Listrik","Paket Internet","Lainnya"] },
   { label:"Healing", icon:"ti-walk", optionalNote:true },
@@ -1072,18 +1073,24 @@ function selectSubCat(label){
     b.className='cat-btn';
     if(b.textContent===label) b.classList.add(currentType==='in'?'selected-in':'selected-out');
   });
-  // Kalau subkategori yang dipilih adalah "Lainnya", tampilkan
-  // field keterangan opsional (tidak mengubah behavior kategori
-  // yang sudah punya manual/optionalNote di levelnya sendiri).
+  // Field keterangan untuk sub-kategori Tagihan: "Lainnya" wajib diisi
+  // (perlu jelas keterangan tagihan apa), sedangkan IndiHome/Listrik/
+  // Paket Internet keterangannya opsional (nama tagihannya sudah jelas
+  // dari sub-kategori itu sendiri, keterangan cuma tambahan kalau perlu).
+  // Ini cuma berlaku untuk kategori yang punya sub (saat ini: Tagihan) -
+  // tidak mengubah behavior kategori lain yang sudah punya manual/
+  // optionalNote di levelnya sendiri (Jajan, Parkir, Bensin, dst).
   const manualWrap=document.getElementById('manual-wrap');
   const catDef=(currentType==='in'?CATS_IN:CATS_OUT).find(c=>c.label===selectedCat);
   if(!(catDef&&(catDef.manual||catDef.optionalNote))){
     if(label==='Lainnya'){
+      document.getElementById('m-manual').placeholder='Wajib diisi...';
+      document.getElementById('m-manual').dataset.required='true';
+      manualWrap.style.display='block';
+    } else {
       document.getElementById('m-manual').placeholder='Keterangan (opsional)...';
       document.getElementById('m-manual').dataset.required='false';
       manualWrap.style.display='block';
-    } else {
-      manualWrap.style.display='none';
     }
   }
 }
@@ -1193,7 +1200,7 @@ async function saveTransaction(){
 }
 
 /* ── TX PREVIEW ── */
-const TX_ICON_MAP={'Freelance':'ti-briefcase','Payment WaGoMu':'ti-building-bank','Payment Cerah':'ti-school','Jualan':'ti-shopping-bag','Nabung':'ti-pig-money','Belanja Bulanan':'ti-basket','Jajan':'ti-tools-kitchen-2','Bensin':'ti-gas-station','Tagihan':'ti-receipt','Healing':'ti-walk','Narik Uang':'ti-cash','Butuh':'ti-tool','Transfer Dompet':'ti-transfer','Lainnya':'ti-dots'};
+const TX_ICON_MAP={'Freelance':'ti-briefcase','Payment WaGoMu':'ti-building-bank','Payment Cerah':'ti-school','Jualan':'ti-shopping-bag','Nabung':'ti-pig-money','Belanja Bulanan':'ti-basket','Jajan':'ti-tools-kitchen-2','Parkir':'ti-parking','Bensin':'ti-gas-station','Tagihan':'ti-receipt','Healing':'ti-walk','Narik Uang':'ti-cash','Butuh':'ti-tool','Transfer Dompet':'ti-transfer','Lainnya':'ti-dots'};
 function openTxPreview(id){
   const tx=allTx.find(t=>t.id===id); if(!tx) return;
   const icon=TX_ICON_MAP[tx.Kategori]||'ti-receipt';
@@ -1292,7 +1299,7 @@ function renderHistory(){
     const dc=tx.Tipe==='in'?'in':'out';
     const sign=tx.Tipe==='in'?'+':'-';
     const dotClass=tx.Kantong==='Tabungan'?'dot-tab':(tx.Kantong==='Uang Saku'?'dot-saku':'dot-ops');
-    const iconMap={'Freelance':'ti-briefcase','Payment WaGoMu':'ti-building-bank','Payment Cerah':'ti-school','Jualan':'ti-shopping-bag','Nabung':'ti-pig-money','Belanja Bulanan':'ti-basket','Jajan':'ti-tools-kitchen-2','Bensin':'ti-gas-station','Tagihan':'ti-receipt','Healing':'ti-walk','Narik Uang':'ti-cash','Butuh':'ti-tool','Transfer Dompet':'ti-transfer','Lainnya':'ti-dots'};
+    const iconMap={'Freelance':'ti-briefcase','Payment WaGoMu':'ti-building-bank','Payment Cerah':'ti-school','Jualan':'ti-shopping-bag','Nabung':'ti-pig-money','Belanja Bulanan':'ti-basket','Jajan':'ti-tools-kitchen-2','Parkir':'ti-parking','Bensin':'ti-gas-station','Tagihan':'ti-receipt','Healing':'ti-walk','Narik Uang':'ti-cash','Butuh':'ti-tool','Transfer Dompet':'ti-transfer','Lainnya':'ti-dots'};
     const icon=iconMap[tx.Kategori]||'ti-receipt';
     const label=tx.SubKategori?`${tx.Kategori} · ${tx.SubKategori}`:tx.Kategori;
     const mine=isMyTx(tx);
