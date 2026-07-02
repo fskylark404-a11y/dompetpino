@@ -1559,13 +1559,29 @@ function goalCardHTML(g){
   </div>`;
 }
 
+/* Parse tanggal format "dd/mm/yyyy" (string) jadi objek Date sungguhan.
+   Dipakai untuk sortir histori goal - membandingkan string tanggal
+   langsung dengan operator > (seperti kode sebelumnya) SALAH, karena
+   itu membandingkan huruf per huruf (leksikografis), bukan urutan
+   waktu. Contoh: "01/07/2026" (1 Juli, lebih baru) dianggap "lebih
+   kecil" dari "23/06/2026" (23 Juni, lebih lama) karena karakter '0'
+   < '2' di posisi pertama - akibatnya transaksi terbaru nyasar ke
+   bawah, bukan ke atas. Return new Date(0) (paling lama) kalau format
+   tidak dikenali, supaya data aneh tidak bikin sortir error/crash. */
+function parseTglID(str){
+  if(!str) return new Date(0);
+  const pts=String(str).split('/');
+  if(pts.length<3) return new Date(0);
+  const d=new Date(+pts[2], +pts[1]-1, +pts[0]);
+  return isNaN(d.getTime())?new Date(0):d;
+}
 function toggleGoalHistory(gid){
   const wrap=document.getElementById('gh-'+gid);
   const btn=document.getElementById('ghbtn-'+gid);
   if(!wrap) return;
   const open=wrap.classList.toggle('open');
   if(open){
-    const hist=cachedGoalHistory.filter(h=>String(h.goalId)===String(gid)).sort((a,b)=>b.tanggal>a.tanggal?1:-1);
+    const hist=cachedGoalHistory.filter(h=>String(h.goalId)===String(gid)).sort((a,b)=>parseTglID(b.tanggal)-parseTglID(a.tanggal));
     wrap.innerHTML='<div class="goal-history-title">Histori</div>'+(hist.length?hist.map(h=>`<div class="goal-history-item"><div class="goal-history-left"><span class="goal-history-dot ${h.tipe}"></span><span class="goal-history-meta">${h.username} · ${h.tanggal}</span></div><span class="goal-history-amt ${h.tipe}">${h.tipe==='add'?'+':'-'}${formatRp(h.nominal)}</span></div>`).join(''):'<p class="goal-history-empty">Belum ada histori</p>');
     if(btn) btn.textContent='▲ Sembunyikan';
   } else {
